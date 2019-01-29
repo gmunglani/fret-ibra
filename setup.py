@@ -23,9 +23,9 @@ setup(
     url = "https://github.com/gmunglani/fret-ibra",
     long_description_content_type="text/markdown",
     entry_points={
-        'console_scripts': ['ibra=ibra:main'],
+        'console_scripts': ['ibra=ibra.__main__:main'],
     },
-    python_requires='>=2.7',
+    python_requires='==2.7',
     keywords=['opencv', 'background subtraction', 'DBSCAN clustering', 'FRET imaging', 'ratiometric'],
     zip_safe=True,
 )
