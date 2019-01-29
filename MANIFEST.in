@@ -1,3 +1,4 @@
 include README.md
 include LICENSE
 include ibra/*.cfg
+include requirements.txt
