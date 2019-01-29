@@ -8,7 +8,7 @@ fret-ibra is used to process fluorescence resonance energy transfer (FRET) inten
 Use the package manager [pip](https://pip.pypa.io/en/stable/).
 
 ```bash
-pip install ibra
+pip install fret-ibra
 ```
 
 ## Usage
