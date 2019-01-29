@@ -154,16 +154,16 @@ class stack(frame):
 
 
     # Use log file to print frame metrics
-    def logger_update(self,logger,back_save,time_elapsed):
+    def logger_update(self,logger,h5_save,time_elapsed):
         if (max(np.ediff1d(self.frange, to_begin=self.frange[0])) > 1):
             logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + ",".join(
-                map(str, [x + 1 for x in self.frange])) + ', time: ' + time_elapsed + ' sec, save: ' + str(back_save))
+                map(str, [x + 1 for x in self.frange])) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
         else:
             logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + str(self.frange[0]+1) + '-' + str(
-                self.frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(back_save))
+                self.frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
 
-def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,back_save,start,stop,manual):
+def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,start,stop,manual):
     # Run through the subtraction on a per frame basis
     val = ['YFP','CFP']
     # Run through both donor and acceptor channels depending on the eps values
@@ -197,17 +197,17 @@ def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,back
             print(a+" (Background Subtraction) Time: " + time_elapsed + " seconds")
 
         # Update log file with background subtraction data
-        all.logger_update(logger,back_save,time_elapsed)
+        all.logger_update(logger,h5_save,time_elapsed)
 
         # Save animation of frame metrics
         if (anim_save):
-            background_animation(all,work_out_path)
+            background_animation(verbose,all,work_out_path)
 
         # Save background subtracted stack as HDF5
-        if (back_save):
+        if (h5_save):
             h5(all.frange,all.im_framef,a,work_out_path + '_back.h5',fstart=start)
             if (verbose):
-                print("Saving " + a + " stack in " + work_out_path)
+                print("Saving " + a + " stack in " + work_out_path + + '.h5')
 
         if (tiff_save):
             tiff(all.im_framef, work_out_path + '_' + a + '.tif')

@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+#  -*- coding: utf-8 -*-
 
 import os, sys, getopt
 import configparser
@@ -29,7 +30,7 @@ def main():
     if "-c" not in sys.argv[1:]:
         raise IOError("Config file not provided")
     else:
-        options, remainder = getopt.getopt(sys.argv[1:], 'c:t:v:h:')
+        options, remainder = getopt.getopt(sys.argv[1:], 'c:tvsaeh')
         for opt, arg in options:
             if opt in ('-c'):
                 cfname = arg
@@ -115,7 +116,7 @@ def main():
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm
-        bs.background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,start,stop,manual)
+        bs.background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,start,stop,manual)
 
     # Ratio image module
     if (ratio):

@@ -6,11 +6,13 @@ import cv2
 from functions import h5, logit, intensity_plot, pixel_count, tiff, prealloc, bleach_fit
 from timeit import default_timer as timer
 import h5py
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # Bleach correction module
-def bleach(verbose,logger,work_out_path,YFP_range,CFP_range,fitter,bleach_save,tiff_save):
+def bleach(verbose,logger,work_out_path,YFP_range,CFP_range,fitter,h5_save,tiff_save):
     # Start time
     time_start = timer()
 
@@ -75,16 +77,16 @@ def bleach(verbose,logger,work_out_path,YFP_range,CFP_range,fitter,bleach_save,t
     # Update log file
     logger.info('(Bleach Correction) ' + 'YFP_bleach_frames: ' + str(YFP_frange[0]+1) + '-' + str(YFP_frange[-1]+1)
                 + ', CFP_bleach_frames: ' + str(CFP_frange[0]+1) + '-' + str(CFP_frange[-1]+1)
-                + ', time: ' + time_elapsed + ' sec, save: ' + str(bleach_save))
+                + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
-    if (bleach_save or tiff_save):
+    if (h5_save or tiff_save):
         ratio = np.true_divide(YFP, CFP, out=np.zeros_like(YFP,dtype=np.float16), where=CFP!= 0)
         ratio = np.nan_to_num(ratio)
         ratio = np.uint8(ratio * 255.0 / np.amax(ratio))
 
     # Save bleaching correction factors and bleach corrected ratio image
-    if (bleach_save):
+    if (h5_save):
         h5(frange,YFPb,'YFPb',work_out_path+'_back_ratio.h5')
         h5(frange,CFPb,'CFPb',work_out_path+'_back_ratio.h5')
         h5(frange,ratio,'Ratio',work_out_path+'_back_ratio.h5')
@@ -97,7 +99,7 @@ def bleach(verbose,logger,work_out_path,YFP_range,CFP_range,fitter,bleach_save,t
         if (verbose):
             print("Saving bleached ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif')
 
-def ratio(verbose,logger,work_out_path,crop,res,register,union,ratio_save,tiff_save,start,stop,manual):
+def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,start,stop,manual):
     # Start time
     time_start = timer()
 
@@ -174,7 +176,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,ratio_save,tiff_s
     mult = np.float16(255)/np.float16(res)
     for frame,count in enumerate(frange):
         if (verbose):
-            print ("(Ratio Processing) Frame Number: " + str(count+fstart+1))
+            print ("(Ratio Processing) Frame Number: " + str(count+fstart))
 
         # Image registration for donor channel
         if (register):
@@ -228,18 +230,18 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,ratio_save,tiff_s
     # Update log file to save stack metrics
     if (max(np.ediff1d(frange, to_begin=frange[0])) > 1):
         logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(
-            map(str, nfrange)) + ', time: ' + time_elapsed + ' sec, save: ' + str(ratio_save))
+            map(str, nfrange)) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
     else:
-        logger.info('(Ratio Processing) ' + 'frames: ' + str(nfrange[0]-1) + '-' + str(frange[-1]-1) + ', time: ' + time_elapsed + ' sec, save: ' + str(ratio_save))
+        logger.info('(Ratio Processing) ' + 'frames: ' + str(nfrange[0]-1) + '-' + str(frange[-1]-1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
-    if (ratio_save or tiff_save):
+    if (h5_save or tiff_save):
         ratio = np.true_divide(YFPc, CFPc, out=np.zeros_like(YFPc,dtype=np.float16), where=CFPc!= 0)
         ratio = np.nan_to_num(ratio)
         ratio = np.uint8(ratio * 255.0 / np.amax(ratio))
 
     # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
-    if (ratio_save):
+    if (h5_save):
         h5(frange,YFPc,'YFP',work_out_path+'_back_ratio.h5',fstart=fstart)
         h5(frange,CFPc,'CFP',work_out_path+'_back_ratio.h5')
         h5(frange,YFPnz,'YFPnz',work_out_path+'_back_ratio.h5')
