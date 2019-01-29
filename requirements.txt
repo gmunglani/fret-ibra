@@ -1,10 +1,10 @@
 numpy
-scipy
-scikit-image>=0.13.1
-scikit-learn>=0.19.1
-pims>=0.4.1
-opencv-python>=2.4.13
+scipy>
+scikit-image
+scikit-learn
+pims
+opencv-python
 matplotlib
-h5py>=2.7.1
-imreg_dft>=2.0.0
+h5py
+imreg_dft
 
