@@ -5,7 +5,7 @@ import ibra
 # Fix so that the setup.py usage is CWD-independent
 SETUPDIR = os.path.abspath(os.path.dirname(__file__))
 reqsfname = os.path.join(SETUPDIR, 'requirements.txt')
-reqs = open(reqsfname, 'r', encoding='utf-8').read().strip().splitlines()
+reqs = open(reqsfname, 'r').read().strip().splitlines()
 
 with open("README.md", "rb") as f:
     long_descr = f.read().decode("utf-8")
