@@ -1,5 +1,5 @@
 # Tutorial
-The config file (.cfg) contains parameters including the path to the image stack files, the range of frames to be processed, and multiple other options for each module. A log file with details on the input parameters is updated after each module run. The *Config_tutorial.cfg* file in this folder is used to demonstrate the functionality of this toolkit. 
+The config file (.cfg) contains parameters including the path to the image stack files, the range of frames to be processed, and multiple other options for each module. A log file with details on the input parameters is updated after each module run. The *Config_tutorial.cfg* file in examples folder is used to demonstrate the functionality of this toolkit. 
 
 Before processing, the donor and acceptor channel image stacks should be renamed to the following format
 ```txt

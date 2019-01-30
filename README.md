@@ -41,4 +41,4 @@ Processing includes:
 
 ![Ratio](/examples/images/Ratio_output.png)
 
-A detailed example can be found here: [Tutorial](/examples/Tutorial.md)
+A detailed explanation of the toolkit can be found here: [Tutorial](/examples/Tutorial.md)
