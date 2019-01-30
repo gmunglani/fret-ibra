@@ -109,8 +109,8 @@ def main():
     if (background):
         # Input window tile size and eps values for DBSCAN clustering algorithm
         win = int(config['Background Parameters'].get('window'))
-        YFP_eps = float(config['Background Parameters'].get('YFP_eps'))
-        CFP_eps = float(config['Background Parameters'].get('CFP_eps'))
+        YFP_eps = float(config['Background Parameters'].get('acceptor_eps'))
+        CFP_eps = float(config['Background Parameters'].get('donor_eps'))
         eps = [YFP_eps, CFP_eps]
 
         assert (win > 0), "window should be a positive integer"
