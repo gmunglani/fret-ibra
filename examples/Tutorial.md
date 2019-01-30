@@ -1,6 +1,6 @@
 # Tutorial
 
-The config file (.cfg) contains variables including the path to the image stack files, the range of frames to be processed, and multiple other options for each module. 
+The config file (.cfg) contains variables including the path to the image stack files, the range of frames to be processed, and multiple other options for each module. A log file is updated after each module is run.
 
 The *Config_tutorial.cfg* file in this folder is used to demonstrate the functionality of this toolkit. First, the *input_path* and *filename* parameters needs to be set.
 ```txt
@@ -32,9 +32,9 @@ acceptor_eps = 0.01
 donor_eps = 0.01 
 ```
 
-The background subtraction module can then be run with multiple options including an output HDF5 file (-s) (necessary for further processing), a video animation of per-frame metrics (-a) and a TIFF output file.
+The background subtraction module can then be run with multiple options including an output HDF5 file (-s) (necessary for further processing), a video animation of per-frame metrics (-a) and a TIFF output file (-t).
 ```bash
-ibra -c Config_tutorial.cfg -a -t -s
+ibra -c Config_tutorial.cfg -a -t -s -v
 ```
 
 Once both donor and acceptor channels have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image to speed up processing time (by the top left and bottom right comma-separated coordinates), image registration (*register*), and overlap correction (*union*). Furthermore, the bit-depth (*resolution*) must be set to either 8, 12, or 16. 
@@ -46,3 +46,15 @@ resolution = 12
 register = 1
 union = 1
 ```
+
+The ratiometric processing module can then be run with the command 
+```bash
+ibra -c Config_tutorial.cfg -e
+```
+
+
+
+
+
+
+
