@@ -14,7 +14,7 @@ setup(
     name = "fret-ibra",
     packages = ["ibra"],
     install_requires=reqs,
-    version = "0.1.0",
+    version = "0.2.0",
     license='BSD',
     description = "FRET-IBRA is used to process fluorescence resonance energy transfer (FRET) intensity data to produce ratiometric images for further analysis",
     long_description = long_descr,
