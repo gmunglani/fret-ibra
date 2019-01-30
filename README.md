@@ -27,10 +27,10 @@ Options: -t   Output TIFF stack
 ## Examples
 
 ### Acceptor channel input image
-![YFP](/examples/YFP_input.png)
+![YFP](/examples/images/YFP_input.png)
 
 ### Donor channel input image
-![CFP](/examples/CFP_input.png)
+![CFP](/examples/images/CFP_input.png)
 
 ### Ratiometric output image (8-bit)
 Processing includes:
@@ -39,6 +39,6 @@ Processing includes:
 * Overlap correction
 * Bleach correction
 
-![Ratio](/examples/Ratio_output.png)
+![Ratio](/examples/images/Ratio_output.png)
 
-A detailed tutorial can be found here: [tutorial](/examples)
+A detailed example can be found here: [Tutorial](/examples)

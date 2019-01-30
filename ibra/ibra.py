@@ -67,7 +67,7 @@ def main():
     config.read(cfname)
 
     # Initialize input/output paths
-    inp_path = config['File Path'].get('inppath').encode("utf-8")
+    inp_path = config['File Path'].get('input_path').encode("utf-8")
     fname = config['File Path'].get('filename').encode("utf-8")
     out_path = os.getcwd()
 
