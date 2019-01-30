@@ -47,9 +47,8 @@ class stack(frame):
 
         # Find frame size and set window size
         self.siz1,self.siz2 = self.im_stack.frame_shape
-        window = win if self.eps > 0.01 else win*2
-        self.dim = np.int16(self.siz2/window)
-        self.height = np.int16(window)
+        self.dim = np.int16(self.siz2/win)
+        self.height = np.int16(win)
         self.width = np.int16(self.siz1/self.dim)
 
         # Create underlying background mesh
@@ -106,7 +105,7 @@ class stack(frame):
 
 
     # Subtract median background from frame intensities
-    def subtraction(self):
+    def subtraction(self,logger):
         # Build a median intensity mask
         im_median_mask = np.multiply(self.ind.im_median,(self.ind.labels+1))
         pos_front = np.int16(np.where(im_median_mask==0)[0])
@@ -131,13 +130,13 @@ class stack(frame):
         except:
             # Change the eps value if DBSCAN does not work
             self.ind.XY_interp_back = np.zeros((self.width,self.height))
-            self.logger.error("".join((self.val,'_eps: ',str(self.eps),', frame: ',str(self.ind.count+1)," (eps value too low)")))
+            logger.error("".join((self.val,'_eps: ',str(self.eps),', frame: ',str(self.ind.count+1)," (eps value too low)")))
 
 
     # Use a bilateral smoothing filter to preserve edges
     def filter(self):
         self.ind.im_frame = np.float32(self.ind.im_frame)
-        filtered = cv2.bilateralFilter(self.ind.im_frame, np.int16(math.ceil(9 * self.siz2 / 1280)), self.width*0.5, self.width*0.5)
+        filtered = cv2.bilateralFilter(self.ind.im_frame, np.int16(math.ceil(9 * self.siz2 / 320)), self.width*0.5, self.width*0.5)
         self.ind.im_frame = np.uint16(filtered)
 
 
@@ -185,7 +184,7 @@ def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_s
                 print(a +' (Background Subtraction) Frame Number: ' + str(count + 1))
             all.properties(count)
             all.clustering()
-            all.subtraction()
+            all.subtraction(logger)
             all.filter()
             all.metric_update()
 
@@ -206,10 +205,11 @@ def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_s
         if (h5_save):
             h5(all.frange,all.im_framef,a,work_out_path + '_back.h5',fstart=start)
             if (verbose):
-                print("Saving " + a + " stack in " + work_out_path + + '.h5')
+                print("Saving " + a + " stack in " + work_out_path + '.h5')
 
+        # Save background-subtracted YFP/CFP images as TIFF
         if (tiff_save):
             tiff(all.im_framef, work_out_path + '_' + a + '.tif')
             if (verbose):
-                print("Saving "+a+" TIFF stack in " + work_out_path + '_' + a + '.tif')
+                print("Saving " + a + " TIFF stack in " + work_out_path + '_back_' + a + '.tif')
 

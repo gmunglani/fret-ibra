@@ -37,7 +37,7 @@ def background_animation(verbose,stack, work_out_path):
         ax2.clear()
         minmax = np.ptp(np.ravel(stack.im_backf[:,:,i]))
         line2 = ax2.plot_surface(stack.X, stack.Y, stack.im_backf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
-        ax2.set_title("Min to Max: {}".format(minmax))
+        ax2.set_title("Min to Max (Background): {}".format(minmax))
         ax2.set_zlim(0, np.amax(stack.im_medianf))
         ax2.set_xticklabels([])
         ax2.set_yticklabels([])
@@ -45,7 +45,7 @@ def background_animation(verbose,stack, work_out_path):
 
         ax3.clear()
         line3 = ax3.plot_surface(X1, Y1, stack.im_framef[i, :, :], cmap=cm.bwr, linewidth=0, antialiased=False)
-        ax3.set_title("Total Number of Tiles: {}".format(stack.labelsf[:,i].size))
+        ax3.set_title("Background Subtracted Image")
         ax3.set_zlim(0, np.amax(stack.im_medianf))
         ax3.set_xticklabels([])
         ax3.set_yticklabels([])
@@ -54,7 +54,8 @@ def background_animation(verbose,stack, work_out_path):
         ax4.clear()
         signal = stack.labelsf[:,i]
         signal[signal > 0] = 0
-        ax4.set_title("Number of Tiles with Signal: {}".format(-np.sum(signal)))
+        psignal = -np.float32(np.sum(signal))/np.float32(stack.labelsf[:,i].size)
+        ax4.set_title("Percentage of Tiles with Signal: %0.2f" % (psignal))
         ax4.set_xlim(0, 1)
         ax4.set_ylim(0, 1)
         ax4.set_zlim(0, 1)
@@ -87,12 +88,12 @@ def background_animation(verbose,stack, work_out_path):
     ax1.set_yticklabels([])
     ax1.grid(False)
 
-    ax2.set_title("Min to Max: {}".format(0))
+    ax2.set_title("Min to Max (Background): {}".format(0))
     ax2.set_xticklabels([])
     ax2.set_yticklabels([])
     ax2.grid(False)
 
-    ax3.set_title("Number of Tiles: {}".format(stack.labelsf[:,0].size))
+    ax3.set_title("Background Subtracted Image")
     ax3.set_xticklabels([])
     ax3.set_yticklabels([])
     ax3.grid(False)
@@ -101,7 +102,7 @@ def background_animation(verbose,stack, work_out_path):
     ax4.set_xlim(0, 1)
     ax4.set_ylim(0, 1)
     ax4.set_zlim(0, 1)
-    ax4.set_title("Number of Tiles with Signal: {}".format(0))
+    ax4.set_title("Percentage of Tiles with Signal: {}".format(0))
 
     ax1.view_init(elev=15., azim=30.)
     ax2.view_init(elev=15., azim=30.)
@@ -229,12 +230,18 @@ def bleach_fit(brange,frange,intensity,fitter):
     if (fitter == 'linear'):
         # Fitting regularized linear model
         reg = linear_model.Ridge(alpha=10000,fit_intercept=True)
-        reg.fit(brange.reshape(-1, 1), intensity.reshape(-1, 1))
+        try:
+            reg.fit(brange.reshape(-1, 1), intensity.reshape(-1, 1))
+        except:
+            raise ValueError('Fit not found - try a larger range')
         pred = reg.predict(frange.reshape(-1, 1))
     elif (fitter == 'exponential'):
         # Fitting exponential model
         guess = (intensity[0], 0.001, 0)
-        popt, tmp = curve_fit(exp_func, brange, intensity, p0=guess)
+        try:
+            popt, tmp = curve_fit(exp_func, brange, intensity, p0=guess)
+        except:
+            raise ValueError('Fit not found - try a larger range')
         pred = exp_func(frange, *popt)
 
     # Bleach corrected intensity values

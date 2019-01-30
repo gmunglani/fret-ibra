@@ -11,7 +11,7 @@ import background_subtraction as bs
 import ratiometric_processing as rp
 import numpy as np
 
-__version__='1.0'
+__version__='0.1.0'
 
 def usage():
     print("")
@@ -93,7 +93,7 @@ def main():
     frange = config['Range'].get('continuous_range').split(':')
     start = int(frange[0])
     stop = int(frange[1])
-    manual = config['Range'].get('manual').split(',')
+    manual = config['Range'].get('manual_frames').split(',')
     manual = map(int,manual)
 
     assert (start > 0), "continuous_range start should be a positive integer"
