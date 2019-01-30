@@ -18,7 +18,7 @@ def usage():
     print("Program: FRET-IBRA (FRET-Image Background-subtracted Ratiometric Analysis)")
     print("Version: {}".format(__version__))
     print("")
-    print("Usage:   ibra -c <config file> [Options]")
+    print("Usage:   ./ibra.py -c <config file> [Options]")
     print("")
     print("Options: -t   Output TIFF stack")
     print("         -v   Print progress output (verbose)")
@@ -29,6 +29,11 @@ def usage():
     print("")
 
 def main():
+    # Print usage file
+    if '-h' in sys.argv[1:]:
+        usage()
+        sys.exit()
+
     # Check if config file is available
     if "-c" not in sys.argv[1:]:
         raise IOError("Config file not provided")
@@ -58,9 +63,6 @@ def main():
                 verbose = True
                 anim_save = True
                 h5_save = True
-            if opt in ('-h'):
-                usage()
-                sys.exit()
 
     # Initialize config files
     config = configparser.ConfigParser()
