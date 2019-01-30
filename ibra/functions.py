@@ -5,7 +5,6 @@ Miscellaneous functions for plotting, logging, data output, fitting etc
 
 import numpy as np
 import matplotlib
-#matplotlib.use('TkAgg')
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm

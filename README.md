@@ -4,16 +4,11 @@ FRET - IBRA is a toolkit to process fluorescence resonance energy transfer (FRET
 
 
 ## Installation
-FRET - IBRA can be downloaded directly from github:
-
+FRET - IBRA can be downloaded directly from github.
 ```bash
 git clone https://github.com/gmunglani/fret-ibra.git
-```
-
-For the command line tool use the package manager pip (**under development**).
-
-```bash
-pip install fret-ibra
+cd fret-ibra
+pip install . --user
 ```
 Additional requirements: ffmpeg
 
