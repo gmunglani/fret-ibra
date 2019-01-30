@@ -6,7 +6,7 @@ Before processing, the donor and acceptor channel image stacks should be renamed
 Acceptor *file_identifier*_YFP.tiff
 Donor    *file_idenfitier*_CFP.tiff
 ```
-First, the *input_path* (full or relative) and *filename* parameters needs to be set.
+First, the *input_path* (full path) and *filename* parameters needs to be set.
 ```txt
 input_path = ./examples/stack 
 filename = Test

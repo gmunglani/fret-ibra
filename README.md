@@ -15,7 +15,7 @@ Additional requirements: ffmpeg
 ## Usage
 
 ```bash
-Usage: ./ibra.py -c <config file> [Options]
+Usage: ibra -c <config file> [Options]
 Options: -t   Output TIFF stack
          -v   Print progress output (verbose)
          -s   Save as HDF5 file

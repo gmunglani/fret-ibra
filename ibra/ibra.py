@@ -18,7 +18,7 @@ def usage():
     print("Program: FRET-IBRA (FRET-Image Background-subtracted Ratiometric Analysis)")
     print("Version: {}".format(__version__))
     print("")
-    print("Usage:   ./ibra.py -c <config file> [Options]")
+    print("Usage:  ibra -c <config file> [Options]")
     print("")
     print("Options: -t   Output TIFF stack")
     print("         -v   Print progress output (verbose)")
