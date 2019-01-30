@@ -1,6 +1,6 @@
-# Fluorescence Resonance Energy Transfer - Image Background-subtracted Ratiometric Analysis (fret-ibra)
+# FRET - Image Background-subtracted Ratiometric Analysis (FRET-IBRA)
 
-fret-ibra is used to process fluorescence resonance energy transfer (FRET) intensity data to produce ratiometric images for further analysis. The package contains modules for the background subtraction (using a novel algorithm based on DBSCAN clustering), image registration, and bleach correction of the donor and acceptor channels. The package accepts only multi-image TIFF stacks and outputs both multi-image TIFF and HDF5 stacks. 
+FRET-IBRA is used to process fluorescence resonance energy transfer (FRET) intensity data to produce ratiometric images for further analysis. The package contains modules for the background subtraction (using a novel algorithm based on DBSCAN clustering), image registration, and bleach correction of the donor and acceptor channels. The package accepts only multi-image TIFF stacks and outputs both multi-image TIFF and HDF5 stacks. 
 
 
 ## Installation
@@ -14,7 +14,7 @@ pip install fret-ibra
 ## Usage
 
 ```bash
-Usage: python ibra.py -c <config file> [Options]
+Usage: ibra -c <config file> [Options]
 Options: -t   Output TIFF stack
          -v   Print progress output (verbose)
          -s   Save as HDF5 file

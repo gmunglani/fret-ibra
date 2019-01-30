@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Miscellaneous functions for plotting, logging, data output, fitting etc
+"""
 
 import numpy as np
 import matplotlib

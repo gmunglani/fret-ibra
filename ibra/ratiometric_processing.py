@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Image registration, union, ratiometric processing and bleach correction
+"""
 
 import numpy as np
 import imreg_dft as ird

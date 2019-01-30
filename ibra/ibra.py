@@ -1,5 +1,8 @@
 #!/usr/bin/env python2.7
 #  -*- coding: utf-8 -*-
+"""
+FRET-IBRA is used to create fully processed ratiometric images from input donor and acceptor intensity TIFF images
+"""
 
 import os, sys, getopt
 import configparser
@@ -12,10 +15,10 @@ __version__='1.0'
 
 def usage():
     print("")
-    print("Program: ibra.py (Image Background-subtracted Ratiometric Analysis)")
+    print("Program: FRET-IBRA (FRET-Image Background-subtracted Ratiometric Analysis)")
     print("Version: {}".format(__version__))
     print("")
-    print("Usage:   python ibra.py -c <config file> [Options]")
+    print("Usage:   ibra -c <config file> [Options]")
     print("")
     print("Options: -t   Output TIFF stack")
     print("         -v   Print progress output (verbose)")

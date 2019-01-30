@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-===========================================================
 Background subtraction with the DBSCAN clustering algorithm
-===========================================================
-
+using the higher moments of the intensity distribution per tile
 """
+
 from __future__ import print_function, division
 
 import numpy as np
