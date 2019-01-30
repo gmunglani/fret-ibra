@@ -36,3 +36,13 @@ The background subtraction module can then be run with multiple options includin
 ```bash
 ibra -c Config_tutorial.cfg -a -t -s
 ```
+
+Once both donor and acceptor channels have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image to speed up processing time (by the top left and bottom right comma-separated coordinates), image registration (*register*), and overlap correction (*union*). Furthermore, the bit-depth (*resolution*) must be set to either 8, 12, or 16. 
+
+Cropping is not functional for (0,0,0,0). 
+```txt
+crop = 0,0,0,0
+resolution = 12
+register = 1
+union = 1
+```
