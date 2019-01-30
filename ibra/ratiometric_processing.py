@@ -10,7 +10,7 @@ from functions import h5, logit, intensity_plot, pixel_count, tiff, prealloc, bl
 from timeit import default_timer as timer
 import h5py
 import matplotlib
-matplotlib.use('TkAgg')
+#matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 from scipy import ndimage
 
