@@ -69,15 +69,22 @@ def main():
     # Initialize input/output paths
     inp_path = config['File Path'].get('input_path').encode("utf-8")
     fname = config['File Path'].get('filename').encode("utf-8")
-    out_path = os.getcwd()
-
-    # Ensure that input path exists
-    if not os.path.exists(inp_path):
-        raise IOError("Input path does not exist")
+    current_path = os.getcwd()
 
     # Finalize input/output paths
-    work_inp_path = inp_path + '/' + fname
-    work_out_path = out_path + '/' + fname + '/'
+    if inp_path[:2] == '..':
+        work_inp_path = current_path[:-5] + inp_path[2:]
+    elif inp_path[0] == '.':
+        work_inp_path = current_path[:-5] + inp_path[1:]
+    else:
+        work_inp_path = inp_path
+
+    # Ensure that input path exists
+    if not os.path.exists(work_inp_path):
+        raise IOError("Input path does not exist")
+
+    work_inp_path += '/' + fname
+    work_out_path = current_path + '/' + fname + '/'
     if not os.path.exists(work_out_path):
         os.makedirs(work_out_path)
     work_out_path += fname

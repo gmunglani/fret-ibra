@@ -182,7 +182,7 @@ def intensity_plot(nfrange,YFPi,CFPi,path):
     plt.xticks(fontsize=18)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yticks(fontsize=18)
-    plt.legend(['YFP','CFP'],fancybox=None,fontsize=18)
+    plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(path, bbox_inches='tight')
 
 def pixel_count(nfrange,YFPc,CFPc,path):
@@ -196,7 +196,7 @@ def pixel_count(nfrange,YFPc,CFPc,path):
     plt.xticks(fontsize=18)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yticks(fontsize=18)
-    plt.legend(['YFP','CFP'],fancybox=None,fontsize=18)
+    plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(path, bbox_inches='tight')
 
 def block(data,size):
