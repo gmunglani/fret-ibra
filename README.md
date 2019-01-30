@@ -24,7 +24,7 @@ Options: -t   Output TIFF stack
          -h   Print usage
 ```
 
-## Capa
+## Examples
 
 ### Acceptor channel input image
 ![YFP](/examples/YFP_input.png)
@@ -35,4 +35,4 @@ Options: -t   Output TIFF stack
 ### Ratiometric output image
 ![Ratio](/examples/Ratio_output.png)
 
-For a detailed tutorial, look in [tutorial](/examples)
+A detailed tutorial can be found here: [tutorial](/examples)
