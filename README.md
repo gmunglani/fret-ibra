@@ -4,8 +4,13 @@ FRET - IBRA is a toolkit to process fluorescence resonance energy transfer (FRET
 
 
 ## Installation
+FRET - IBRA can be downloaded directly from github:
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/).
+```bash
+git clone https://github.com/gmunglani/fret-ibra.git
+```
+
+For the command line tool use the package manager pip (**under development**).
 
 ```bash
 pip install fret-ibra
