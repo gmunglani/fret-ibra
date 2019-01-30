@@ -1,6 +1,6 @@
 # FRET - Image Background-subtracted Ratiometric Analysis (FRET - IBRA)
 
-FRET - IBRA is used to process fluorescence resonance energy transfer (FRET) intensity data to produce ratiometric images for further analysis. The package contains modules for the background subtraction (using a novel algorithm based on DBSCAN clustering), image registration, and bleach correction of the donor and acceptor channels. The package accepts only multi-image TIFF stacks and outputs both multi-image TIFF and HDF5 stacks. 
+FRET - IBRA is a toolkit to process fluorescence resonance energy transfer (FRET) intensity data to produce ratiometric images for further analysis. This toolkit contains modules for the background subtraction (using an algorithm based on tiled DBSCAN clustering), image registration, overlap correction, and bleach correction of the donor and acceptor channels. It accepts multi-image TIFF stacks as input and outputs both multi-image TIFF and HDF5 stacks for possible further analyses, along with frame-by-frame metrics to estimate quality.
 
 
 ## Installation
@@ -32,7 +32,13 @@ Options: -t   Output TIFF stack
 ### Donor channel input image
 ![CFP](/examples/CFP_input.png)
 
-### Ratiometric output image
+### Ratiometric output image (8-bit)
+Processing includes:
+* Background subtraction for both channels
+* Image registration
+* Overlap correction
+* Bleach correction
+
 ![Ratio](/examples/Ratio_output.png)
 
 A detailed tutorial can be found here: [tutorial](/examples)
