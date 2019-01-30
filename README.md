@@ -26,10 +26,10 @@ Options: -t   Output TIFF stack
 
 ## Capa
 
-### YFP input image
+### Acceptor channel input image
 ![YFP](/examples/YFP_input.png)
 
-### CFP input image
+### Donor channel input image
 ![CFP](/examples/CFP_input.png)
 
 ### Ratiometric output image
