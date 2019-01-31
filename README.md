@@ -8,7 +8,7 @@ FRET - IBRA can be downloaded directly from github.
 ```bash
 git clone https://github.com/gmunglani/fret-ibra.git
 cd fret-ibra
-pip install . --user
+python setup.py install
 ```
 Additional requirements: ffmpeg
 

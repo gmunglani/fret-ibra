@@ -1,20 +1,18 @@
 # Tutorial
-The config file (.cfg) contains parameters including the path to the image stack files, the range of frames to be processed, and multiple other options for each module. A log file with details on the input parameters is updated after each module run. The *Config_tutorial.cfg* file in examples folder is used to demonstrate the functionality of this toolkit. 
+The acceptor and donor image stacks should first be visualised in a package like ImageJ to extract parameters like the range of frames of interest, region of interest, bit-depth, resolution, and the presence of outliers. There parameters can be then set in the config file (.cfg) which also includes the path to the image stack files and multiple other options for each module. A log file is generated with details on the input parameters after each module run.
 
-Before processing, the donor and acceptor channel image stacks should be renamed to the following format
+The *Config_tutorial.cfg* file in /examples is used to demonstrate the functionality of this toolkit. Before processing, the donor and acceptor channel image stacks should be renamed in the following format
 ```txt
-Acceptor *file_identifier*_YFP.tiff
-Donor    *file_idenfitier*_CFP.tiff
+Acceptor *file_identifier*_acceptor.tiff
+Donor    *file_idenfitier*_donor.tiff
 ```
-First, the *input_path* (full path) and *filename* parameters needs to be set.
+First, the *input_path* (**absolute path**) and *filename* parameters needs to be set.
 ```txt
 input_path = ./examples/stack 
 filename = Test
 ```
 
-The range of frames to be processed is then stated with the parameter *continuous_range*. If individual frames are desired, then the *manual_frames* parameter is set with comma-separated values. 
-
-*continuous_range* is only functional when the first frame entry in *manual_frames* is set to 0.
+The range of frames to be processed is then set with the parameter *continuous_range*. If individual frames are desired, then the *manual_frames* parameter is set with comma-separated values. *continuous_range* is only functional when the first frame entry in *manual_frames* is set to 0.
 ```txt
 continuous_range = 1:6
 manual_frames = 0
@@ -37,18 +35,17 @@ acceptor_eps = 0.01
 donor_eps = 0.01 
 ```
 
-The background subtraction module can then be run with multiple options including an output HDF5 file (-s) (necessary for further processing), a video animation of per-frame metrics (-a) and a TIFF output file (-t).
+The background subtraction module can then be run with multiple options including an output HDF5 file (-s) (necessary for further processing), a video animation of per-frame metrics (-a) and a TIFF output file (-t). Option (-e) indicates that all output options are switched on.
 ```bash
 ibra -c Config_tutorial.cfg -a -t -s -v
 ```
+Once this module is run, the video animation can be used to optimize the *eps* values visually. As a general rule of thumb, the lower the *eps* value, the better the background subtraction. *eps* values that are too low to create a cluster will be listed in the log file. 
 
 ## Ratiometric processing
-Once both donor and acceptor channels have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image to speed up processing time (by the top left and bottom right comma-separated coordinates), image registration (*register*), and overlap correction (*union*). Furthermore, the bit-depth (*resolution*) must be set to either 8, 12, or 16. 
-
-Cropping is not functional for (0,0,0,0). 
+Once both donor and acceptor channels have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image (by the top left and bottom right comma-separated coordinates) to the region of interest to speed up processing time. The default for *crop* is (0,0,0,0), which indicates that it is not functional. Furthermore, the *bit_depth* must be set to either 8, 12, or 16. This module also includes boolean parameters for image registration (*register*) and overlap correction (*union*). 
 ```txt
 crop = 0,0,0,0
-resolution = 12
+bit_depth = 12
 register = 1
 union = 1
 ```
@@ -75,11 +72,7 @@ donor_eps = 0
 ## Bleach correction
 Once all unexpected outliers have been corrected, the bleach correction module can (optionally) be run. The median intensity of the foreground in the donor and acceptor image stacks are used to estimate the range of frames between which the bleaching effect can be fit. The type of fit: linear (regularized) or exponential regression must also be given.
 ```txt
-YFP_bleach_range = 1:7
-CFP_bleach_range = 1:7
+YFP_bleach_range = 1:6
+CFP_bleach_range = 1:6
 fit = linear
 ```
-
-
-
-
