@@ -34,35 +34,40 @@ def main():
         usage()
         sys.exit()
 
+    # Initalize flags
+    tiff_save = False
+    verbose = False
+    h5_save = False
+    anim_save = False
+
     # Check if config file is available
     if "-c" not in sys.argv[1:]:
+        usage()
         raise IOError("Config file not provided")
     else:
         options, remainder = getopt.getopt(sys.argv[1:], 'c:tvsaeh')
         for opt, arg in options:
             if opt in ('-c'):
                 cfname = arg
+
             if opt in ('-t'):
+                print("hERE")
                 tiff_save = True
-            else:
-                tiff_save = False
+
             if opt in ('-v'):
                 verbose = True
-            else:
-                verbose = False
+
             if opt in ('-s'):
                 h5_save = True
-            else:
-                h5_save = False
+
             if opt in ('-a'):
                 anim_save = True
-            else:
-                anim_save = False
+
             if opt in ('-e'):
                 tiff_save = True
                 verbose = True
-                anim_save = True
                 h5_save = True
+                anim_save = True
 
     # Initialize config files
     config = configparser.ConfigParser()

@@ -138,11 +138,11 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     assert (crop[0] >= 0), "crop[0] must be >= 0"
     assert (crop[1] <= Xdim), "crop[1] must be <= than the width of the image"
     assert (crop[2] >= 0), "crop[2] must be >= 0"
-    assert (crop[3] <= Ydim), "crop[3] must be <= than the width of the image"
+    assert (crop[3] <= Ydim), "crop[3] must be <= than the height of the image"
 
     # Set default values for crop
-    if (crop[1] == 0):
-        crop[1] = Xdim
+    if (crop[2] == 0):
+        crop[2] = Xdim
     if (crop[3] == 0):
         crop[3] = Ydim
 
@@ -171,8 +171,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         YFPnz, CFPnz, YFPi, CFPi = prealloc(frange)
 
     # Image crop
-    YFPc = YFP[:,crop[0]:crop[1],crop[2]:crop[3]]
-    CFPc = CFP[:,crop[0]:crop[1],crop[2]:crop[3]]
+    YFPc = YFP[:,crop[0]:crop[2],crop[1]:crop[3]]
+    CFPc = CFP[:,crop[0]:crop[2],crop[1]:crop[3]]
 
     # Loop through frange
     mult = np.float16(255)/np.float16(res)
@@ -230,7 +230,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         print("(Ratio Processing) Time: " + time_elapsed + " seconds")
 
     # Update log file to save stack metrics
-    if (max(np.ediff1d(frange, to_begin=frange[0])) > 1):
+    if (max(np.ediff1d(frange)) > 1):
         logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(
             map(str, nfrange)) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
     else:

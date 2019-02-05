@@ -125,7 +125,7 @@ def background_animation(verbose,stack, work_out_path):
     Writer = animation.writers['ffmpeg']
 
     # Write animation file
-    if (max(np.ediff1d(stack.frange, to_begin=stack.frange[0])) > 1):
+    if (max(np.ediff1d(stack.frange)) > 1):
         fname = work_out_path + '_' + stack.val + '_manual'
         num = 1
         while (os.path.isfile(fname+str(num)+'.avi')):
@@ -155,7 +155,7 @@ def logit(path):
 def h5(frange,data,val,path,fstart=0):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
-    if (max(np.ediff1d(frange, to_begin=frange[0])) > 1):
+    if (max(np.ediff1d(frange)) > 1):
         # For manually selected frames, replace data already present in h5 file
         orig = f[val]
         for i,j in enumerate(frange):

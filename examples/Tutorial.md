@@ -26,9 +26,8 @@ ratio = 0
 bleach = 0
 ```
 
-The background module parameters include the *window* (or tile) size (in pixels) to divide the frame into smaller parts and the acceptor and donor channel *eps* values for the DBSCAN clustering algorithm.
-
-Note, that the higher the *eps* value, the more foreground pixels are included. The two channels can be processed separately, by simply setting the *eps* value to 0 for the other channel.
+The background module parameters include the *window* (or tile) size (in pixels) to divide the frame into smaller parts, as well as the acceptor and donor channel *eps* values for the DBSCAN clustering algorithm. The window size should be a factor of the image width (default: 40 for 1280X960).
+Note, that the higher the *eps* value, more pixels are considered foreground. Very gigh *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm. The two channels can be processed separately, by simply setting the *eps* value to 0 for the other channel.
 ```txt
 window = 40
 acceptor_eps = 0.01

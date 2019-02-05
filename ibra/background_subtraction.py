@@ -153,7 +153,7 @@ class stack(frame):
 
     # Use log file to print frame metrics
     def logger_update(self,logger,h5_save,time_elapsed):
-        if (max(np.ediff1d(self.frange, to_begin=self.frange[0])) > 1):
+        if (max(np.ediff1d(self.frange)) > 1):
             logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + ",".join(
                 map(str, [x + 1 for x in self.frange])) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
         else:
@@ -164,6 +164,7 @@ class stack(frame):
 def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,start,stop,manual):
     # Run through the subtraction on a per frame basis
     val = ['acceptor','donor']
+    
     # Run through both donor and acceptor channels depending on the eps values
     for a,b in zip(val,eps):
         if (b == 0):
