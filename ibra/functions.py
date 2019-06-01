@@ -22,12 +22,12 @@ from sklearn import linear_model
 rcParams['font.family'] = 'serif'
 
 # Create animation of background subtraction
-def background_animation(verbose,stack, work_out_path):
+def background_animation(verbose,stack,work_out_path,frange):
     """Background subtraction result per frame video"""
     def data(i, stack, line):
         ax1.clear()
         line1 = ax1.plot_surface(stack.X, stack.Y, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
-        ax1.set_title("{} Frame: {}".format(stack.val, stack.frange[i] + 1))
+        ax1.set_title("{} Frame: {}".format(stack.val, frange[i] + 1))
         ax1.set_zlim(0, np.amax(stack.im_medianf))
         ax1.set_xticklabels([])
         ax1.set_yticklabels([])
@@ -119,21 +119,21 @@ def background_animation(verbose,stack, work_out_path):
     line = [line1, line2, line3, line4]
 
     # Set up animation
-    anim = animation.FuncAnimation(fig, data, fargs=(stack,line),frames=np.arange(len(stack.frange)), interval=20, blit=False, repeat_delay=1000)
+    anim = animation.FuncAnimation(fig, data, fargs=(stack,line),frames=np.arange(len(frange)), interval=20, blit=False, repeat_delay=1000)
 
     # Set up formatting for the movie files
     Writer = animation.writers['ffmpeg']
 
     # Write animation file
-    if (max(np.ediff1d(stack.frange)) > 1):
-        fname = work_out_path + '_' + stack.val + '_manual'
+    if (max(np.ediff1d(frange)) > 1):
+        fname = work_out_path + '_' + stack.val + '_specific'
         num = 1
         while (os.path.isfile(fname+str(num)+'.avi')):
             num += 1
         else:
             anim.save(fname+str(num)+'.avi', writer=Writer(fps=2))
     else:
-        anim.save(work_out_path + '_' + stack.val + '_frames_' + str(stack.frange[0]+1) + '_' + str(stack.frange[-1]+1) + '.avi', writer=Writer(fps=2))
+        anim.save(work_out_path + '_' + stack.val + '_frames' + str(frange[0]+1) + '_' + str(frange[-1]+1) + '.avi', writer=Writer(fps=2))
 
     # End time
     time_end = timer()
@@ -152,7 +152,61 @@ def logit(path):
 
     return logger
 
-def h5(frange,data,val,path,fstart=0):
+def h5(data,val,path,frange=0,rrange=0):
+    """Saving the image stack as a .h5 file"""
+    f = h5py.File(path, 'a')
+
+    if (val+'_frange' in f):
+        orig = np.array(f[val])
+        orange = np.array(f[val+'_frange'])
+        tmp1, tmp2, inter1 = np.intersect1d(frange, orange, return_indices=True)
+
+        print(tmp1)
+
+        if len(inter1) == len(frange):
+            for i,j in enumerate(inter1):
+                print ("Inside", i,j)
+                orig[j] = data[i]
+        else:
+            union = np.union1d(frange, orange)
+            tmp1, tmp2, inter2 = np.intersect1d(union, orange, return_indices=True)
+            current = np.zeros((len(union),data.shape[1],data.shape[2]))
+
+            print (frange,union,orange)
+            print (inter1,inter2)
+            for i,j in enumerate(union):
+                print(j)
+                if (j in frange):
+                    print("Outside", i, j)
+                    current[i] = data[i]
+                else:
+                    print("Limb",inter2[i])
+                    current[i] = orig[inter2[i]]
+
+            del f[val]
+            del f[val+'_frange']
+
+            f.create_dataset(val, data=current, shape=current.shape, dtype=np.uint16, compression='gzip')
+            f.create_dataset(val + '_frange', data=union, shape=union.shape, dtype=np.uint16, compression='gzip')
+
+    else:
+        f.create_dataset(val, data=data, shape=data.shape, dtype=np.uint16, compression='gzip')
+        f.create_dataset(val+'_frange', data=frange, shape=frange.shape, dtype=np.uint16, compression='gzip')
+
+
+        # For manually selected frames, replace data already present in h5 file
+
+    #else:
+        # For continuous frames, delete key and replace
+
+    #    f.create_dataset(val, data=data, shape=data.shape, dtype=np.uint16, compression='gzip')
+    #    # Save the starting frame in the original TIFF stack
+    #    if (val+'_fstart' not in f.attrs and fstart != 0):
+    #        f.attrs[val+'_fstart'] = fstart
+    f.close()
+
+
+def h5o(frange,data,val,path,fstart=0):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
     if (max(np.ediff1d(frange)) > 1):
@@ -184,11 +238,11 @@ def intensity_plot(nfrange,YFPi,CFPi,path):
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(path, bbox_inches='tight')
 
-def pixel_count(nfrange,YFPc,CFPc,path):
+def pixel_count(nfrange,YFPnz,CFPnz,path):
     """Non-zero pixel count per frame"""
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(nfrange,YFPc,c='r',marker='*')
-    ax.plot(nfrange,CFPc,c='b',marker='*')
+    ax.plot(nfrange,YFPnz,c='r',marker='*')
+    ax.plot(nfrange,CFPnz,c='b',marker='*')
 
     plt.xlabel('Frame Number',labelpad=15, fontsize=28)
     plt.ylabel('Non-Zero Pixel Count',labelpad=15, fontsize=28)

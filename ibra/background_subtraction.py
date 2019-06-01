@@ -29,17 +29,10 @@ class frame(object):
 # Create total time stack class
 class stack(frame):
         # Set eps and image type
-    def __init__(self,work_inp_path,val,eps,win,start,stop,manual):
+    def __init__(self,work_inp_path,val,eps,win):
         self.val = val
         self.eps = eps
         self.saver = 0
-
-        # Choose between the entire range and manual frames
-        if (manual[0] != 0):
-            manual = [x - 1 for x in manual]
-            self.frange = manual
-        else:
-            self.frange = np.arange(start-1,stop)
 
         # Import frames
         im_path =  work_inp_path + '_' + self.val + '.tif'
@@ -57,8 +50,8 @@ class stack(frame):
 
 
     # Preallocate arrays for speed on a per frame basis
-    def metric_prealloc(self):
-        length = len(self.frange)
+    def metric_prealloc(self,frange):
+        length = len(frange)
         rows = self.height*self.width
         self.im_medianf = np.empty((self.width,self.height,length),dtype=np.float32)
         self.propf = np.empty((rows,4,length),dtype=np.float32)
@@ -152,19 +145,19 @@ class stack(frame):
 
 
     # Use log file to print frame metrics
-    def logger_update(self,logger,h5_save,time_elapsed):
-        if (max(np.ediff1d(self.frange)) > 1):
+    def logger_update(self,logger,h5_save,time_elapsed,frange):
+        if (max(np.ediff1d(frange)) > 1):
             logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + ",".join(
-                map(str, [x + 1 for x in self.frange])) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
+                map(str, [x + 1 for x in frange])) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
         else:
-            logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + str(self.frange[0]+1) + '-' + str(
-                self.frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
+            logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + str(frange[0]+1) + '-' + str(
+                frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
 
-def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,start,stop,manual):
+def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,frange):
     # Run through the subtraction on a per frame basis
     val = ['acceptor','donor']
-    
+
     # Run through both donor and acceptor channels depending on the eps values
     for a,b in zip(val,eps):
         if (b == 0):
@@ -174,13 +167,15 @@ def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_s
         time_start = timer()
 
         # Create stack class from input TIFF file
-        all = stack(work_inp_path,a,b,win,start,stop,manual)
+        all = stack(work_inp_path,a,b,win)
+
+        assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
 
         # Preallocation of tile metrics
-        all.metric_prealloc()
+        all.metric_prealloc(frange)
 
         # Run through the processing workflow
-        for count in all.frange:
+        for count in frange:
             if (verbose):
                 print(a +' (Background Subtraction) Frame Number: ' + str(count + 1))
             all.properties(count)
@@ -196,15 +191,15 @@ def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_s
             print(a+" (Background Subtraction) Time: " + time_elapsed + " seconds")
 
         # Update log file with background subtraction data
-        all.logger_update(logger,h5_save,time_elapsed)
+        all.logger_update(logger,h5_save,time_elapsed,frange)
 
         # Save animation of frame metrics
         if (anim_save):
-            background_animation(verbose,all,work_out_path)
+            background_animation(verbose,all,work_out_path,frange)
 
         # Save background subtracted stack as HDF5
         if (h5_save):
-            h5(all.frange,all.im_framef,a,work_out_path + '_back.h5',fstart=start)
+            h5(all.im_framef,a,work_out_path + '_back.h5',frange=frange)
             if (verbose):
                 print("Saving " + a + " stack in " + work_out_path + '.h5')
 

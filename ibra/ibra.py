@@ -34,7 +34,7 @@ def main():
         usage()
         sys.exit()
 
-    # Initalize flags
+    # Initialize flags
     tiff_save = False
     verbose = False
     h5_save = False
@@ -74,8 +74,8 @@ def main():
     config.read(cfname)
 
     # Initialize input/output paths
-    inp_path = config['File Path'].get('input_path').encode("utf-8")
-    fname = config['File Path'].get('filename').encode("utf-8")
+    inp_path = config['File Parameters'].get('input_path').encode("utf-8")
+    fname = config['File Parameters'].get('filename').encode("utf-8")
     current_path = os.getcwd()
 
     # Finalize input/output paths
@@ -96,25 +96,26 @@ def main():
         os.makedirs(work_out_path)
     work_out_path += fname
 
+    # Input options for continuous or manual frames
+    frames = config['File Parameters'].get('frames')
+    if (':' in frames):
+        start,stop = frames.split(':')
+        start = int(start)
+        stop = int(stop)
+        assert (stop >= start), "last frame should be greater than the first frame"
+        frange = np.arange(start-1,stop)
+    else:
+        frange = frames.split(',')
+        frange = [int(x) - 1 for x in frange]
+
+    assert (min(frange) >= 0), "frames should only contain positive integers"
+
     # Input modules
     background = config['Modules'].getboolean('background')
     ratio = config['Modules'].getboolean('ratio')
     bleach = config['Modules'].getboolean('bleach')
 
     assert (int(background==True)+int(ratio==True)+int(bleach==True) < 2), "only one module can be run at a time"
-
-    # Input options for continuous or manual frames
-    frange = config['Range'].get('continuous_range').split(':')
-    start = int(frange[0])
-    stop = int(frange[1])
-    manual = config['Range'].get('manual_frames').split(',')
-    manual = map(int,manual)
-
-    assert (start > 0), "continuous_range start should be a positive integer"
-    assert (stop > 0), "continuous_range stop should be a positive integer"
-    assert (stop >= start), "continuous_range stop should be >= continuous_range start"
-    assert (min(manual) >= 0), "manual should only contain integers >= 0 and <= stop"
-    assert (max(manual) <= stop), "manual should only contain integers >= 0 and <= stop"
 
     # Open log file
     logger = logit(work_out_path)
@@ -133,7 +134,7 @@ def main():
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm
-        bs.background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,start,stop,manual)
+        bs.background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,frange)
 
     # Ratio image module
     if (ratio):
@@ -153,18 +154,18 @@ def main():
         union = config['Ratio Parameters'].getboolean('union')
 
         # Run the ratio image processing algorithm
-        rp.ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,start,stop,manual)
+        rp.ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange)
 
     # Bleach correction module
     if (bleach):
         # Input the bleaching range for donor and accepter channels
-        YFP_range = config['Bleach Parameters'].get('YFP_bleach_range').split(':')
-        CFP_range = config['Bleach Parameters'].get('CFP_bleach_range').split(':')
+        YFP_range = config['Bleach Parameters'].get('acceptor_bleach_range').split(':')
+        CFP_range = config['Bleach Parameters'].get('donor_bleach_range').split(':')
         YFP_range = map(int,YFP_range)
         CFP_range = map(int,CFP_range)
 
-        assert (YFP_range[1] >= YFP_range[0]), "YFP_range stop should be >= YFP_range start"
-        assert (CFP_range[1] >= CFP_range[0]), "CFP_range stop should be >= CFP_range start"
+        assert (YFP_range[1] >= YFP_range[0]), "acceptor_bleach_range last frame should be >= acceptor_bleach_range first frame"
+        assert (CFP_range[1] >= CFP_range[0]), "donor_bleach_range last frame should be >= donor_bleach_range first frame"
 
         # Input bleach correction for fitting and correcting image median intensity
         fitter = config['Bleach Parameters'].get('fit')

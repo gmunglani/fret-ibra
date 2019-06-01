@@ -101,7 +101,7 @@ def bleach(verbose,logger,work_out_path,YFP_range,CFP_range,fitter,h5_save,tiff_
         if (verbose):
             print("Saving bleached ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif')
 
-def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,start,stop,manual):
+def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange):
     # Start time
     time_start = timer()
 
@@ -130,9 +130,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Testing input values
     assert (YFP.shape == CFP.shape), "YFP and CFP stacks have different sizes"
-    assert (fstart == CFP_fstart), "YFP and CFP stacks have different start points"
-    assert (start >= fstart), "Background subtracted stacks have not been processed for this start value"
-    assert (stop <= fstart+nframes), "Background subtracted stacks have not been processed for this stop value"
+    assert (YFP_frange == CFP_frange), "YFP and CFP stacks have differing frame numbers"
+    assert (frange in YFP_frange), "Background subtracted stacks have not been processed for some frame values"
     assert (crop[1] >= crop[0]), "crop[1] must be greater than crop[0]"
     assert (crop[3] >= crop[2]), "crop[3] must be greater than crop[2]"
     assert (crop[0] >= 0), "crop[0] must be >= 0"
@@ -145,6 +144,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         crop[2] = Xdim
     if (crop[3] == 0):
         crop[3] = Ydim
+
+    tmp1,tmp2,rrange = np.intersect1d(frange,YFP_frange,return_indices=True)
 
     # Choose between continuous range and manually picking specific frames
     manual_flag = False
@@ -161,9 +162,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             CFPi = np.array(f2['CFPi'])
             f2.close()
         except:
-            # Pre-allocate metric arrays
-            YFPnz, CFPnz, YFPi, CFPi = prealloc(frange)
-            # Set manual_flag if only specific frames are background subtracted and ratio processed
+           # Set manual_flag if only specific frames are background subtracted and ratio processed
             manual_flag = True
     else:
         # Set frange for continuous range and pre-allocate metric arrays
@@ -174,25 +173,28 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     YFPc = YFP[:,crop[0]:crop[2],crop[1]:crop[3]]
     CFPc = CFP[:,crop[0]:crop[2],crop[1]:crop[3]]
 
+    # Pre-allocate metric arrays
+    YFPnz, CFPnz, YFPi, CFPi = prealloc(frange)
+
     # Loop through frange
     mult = np.float16(255)/np.float16(res)
-    for frame,count in enumerate(frange):
+    for count,frame in enumerate(rrange):
         if (verbose):
-            print ("(Ratio Processing) Frame Number: " + str(count+fstart))
+            print ("(Ratio Processing) Frame Number: " + str(frame+1))
 
         # Image registration for donor channel
         if (register):
-            trans = ird.translation(YFPc[count,:,:], CFPc[count,:,:])
+            trans = ird.translation(YFPc[frame,:,:], CFPc[frame,:,:])
             tvec = trans["tvec"].round(4)
-            CFPc[count,:,:] = np.round(ird.transform_img(CFPc[count,:,:], tvec=tvec))
+            CFPc[frame,:,:] = np.round(ird.transform_img(CFPc[frame,:,:], tvec=tvec))
 
         # Otsu thresholding
-        tmp, A_thresh = cv2.threshold(np.uint8(np.float16(YFPc[count,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        tmp, B_thresh = cv2.threshold(np.uint8(np.float16(CFPc[count,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        tmp, A_thresh = cv2.threshold(np.uint8(np.float16(YFPc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        tmp, B_thresh = cv2.threshold(np.uint8(np.float16(CFPc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
         # Setting values below threshold to zero
-        YFPc[count,:,:] *= A_thresh/255
-        CFPc[count,:,:] *= B_thresh/255
+        YFPc[frame,:,:] *= A_thresh/255
+        CFPc[frame,:,:] *= B_thresh/255
 
         # Consider only foreground pixel intensity overlapping between donor and acceptor channels to ensure channels overlap perfectly
         if (union):
@@ -201,25 +203,19 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             C[C > 0] = 1
 
             # Set non-overlapping pixels to zero
-            YFPc[count,:,:] *= C
-            CFPc[count,:,:] *= C
-
-        # Special indexing for only manually picked frame processing
-        if (manual_flag):
-            pos = frame
-        else:
-            pos = count
+            YFPc[frame,:,:] *= C
+            CFPc[frame,:,:] *= C
 
         # Count number of non-zero pixels per frame
-        YFPnz[pos] = np.count_nonzero(A_thresh)
-        CFPnz[pos] = np.count_nonzero(B_thresh)
+        YFPnz[count] = np.count_nonzero(A_thresh)
+        CFPnz[count] = np.count_nonzero(B_thresh)
 
         # Find the median non-zero intensity pixels per frame
-        YFPi[pos] = ndimage.median(YFPc[count,:,:],labels=C)
-        CFPi[pos] = ndimage.median(CFPc[count,:,:],labels=C)
+        YFPi[count] = ndimage.median(YFPc[frame,:,:],labels=C)
+        CFPi[count] = ndimage.median(CFPc[frame,:,:],labels=C)
 
     # Create plot to showcase median intensity over frame number and the number of non-zero pixels per channel (NON-bleach corrected)
-    nfrange = [x + fstart + 1 for x in frange]
+    nfrange = [x + 1 for x in frange]
     intensity_plot(nfrange,YFPi,CFPi,work_out_path+'_intensity_nonbleach.png')
     pixel_count(nfrange,YFPnz,CFPnz,work_out_path+'_pixelcount.png')
 
@@ -231,10 +227,9 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Update log file to save stack metrics
     if (max(np.ediff1d(frange)) > 1):
-        logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(
-            map(str, nfrange)) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
+        logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(map(str, nfrange)) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
     else:
-        logger.info('(Ratio Processing) ' + 'frames: ' + str(nfrange[0]-1) + '-' + str(frange[-1]-1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
+        logger.info('(Ratio Processing) ' + 'frames: ' + str(nfrange[0]) + '-' + str(nfrange[-1]) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
@@ -244,7 +239,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
     if (h5_save):
-        h5(frange,YFPc,'YFP',work_out_path+'_back_ratio.h5',fstart=fstart)
+        h5(frange,YFPc,'YFP',work_out_path+'_back_ratio.h5',frange=frange)
         h5(frange,CFPc,'CFP',work_out_path+'_back_ratio.h5')
         h5(frange,YFPnz,'YFPnz',work_out_path+'_back_ratio.h5')
         h5(frange,CFPnz,'CFPnz',work_out_path+'_back_ratio.h5')
