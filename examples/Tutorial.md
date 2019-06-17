@@ -1,7 +1,7 @@
 # Tutorial
 The acceptor and donor image stacks should first be visualised in a package like ImageJ to extract parameters like the range of frames of interest, region of interest, bit-depth, resolution, and the presence of outliers. These parameters are then set in the config file (.cfg) which also includes the path to the image stack files and other options for each module. A log file is generated with details on the input parameters after each module run.
 
-The *Config_tutorial.cfg* file in /ibra is used to demonstrate the functionality of this toolkit. Before processing, the donor and acceptor channel image stacks should be renamed using the following format
+The *Config_tutorial.cfg* file in */ibra* is used to demonstrate the functionality of this toolkit. Before processing, the donor and acceptor channel image stacks should be renamed using the following format
 ```txt
 Acceptor *file_identifier*_acceptor.tiff
 Donor    *file_idenfitier*_donor.tiff
@@ -12,26 +12,26 @@ input_path = ./examples/stack
 filename = Test
 ```
 
-The range of frames to be processed is then set with the parameter *frames*. Colon-separated values denote continuous frames, while comma-separated values denote manual selected individual frames. 
+The range of frames to be processed is then set with the parameter *frames*. Colon-separated values denote continuous frames, while comma-separated values denote manually selected individual frames. 
 ```txt
 frames = 1:6
 ```
 
 ## Modules
 The user then has the option to run one of four modules. These modules are designed to run sequentially. The workflow is as follows:
-0 -> Background subtraction (acceptor channel)
-1 -> Background subtraction (donor channel)
-2 -> Ratiometric processing
-3 -> Bleach correction (optional)
+* 0 -> Background subtraction (acceptor channel)
+* 1 -> Background subtraction (donor channel)
+* 2 -> Ratiometric processing
+* 3 -> Bleach correction (optional)
 
 ## Background subtraction
-The *background subtraction* modules (0 or 1) should be run first
+The *background subtraction* modules (0 or 1) is run first.
 ```txt
 option = 0
 ```
 
 The background modules' parameters include the *window* (or tile) size (in pixels) to divide the frame into smaller parts, as well as the acceptor and donor channel *eps* values (the two channels are processed separately depending on whether option is set to 0 or 1) for the DBSCAN clustering algorithm. The window size should be a factor of the image width (default: 40 for 1280X960).
-Note, that the higher the *eps* value, more pixels are considered foreground. Very gigh *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm.
+Note, that the higher the *eps* value, more pixels are considered foreground. Very high *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm.
 ```txt
 window = 40
 eps = 0.01
