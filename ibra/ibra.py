@@ -106,38 +106,34 @@ def main():
         frange = np.arange(start-1,stop)
     else:
         frange = frames.split(',')
-        frange = [int(x) - 1 for x in frange]
+        frange = np.array([int(x) - 1 for x in frange])
 
     assert (min(frange) >= 0), "frames should only contain positive integers"
 
     # Input modules
-    background = config['Modules'].getboolean('background')
-    ratio = config['Modules'].getboolean('ratio')
-    bleach = config['Modules'].getboolean('bleach')
+    module = int(config['Modules'].get('option'))
 
-    assert (int(background==True)+int(ratio==True)+int(bleach==True) < 2), "only one module can be run at a time"
+    assert (module >= 0), "option should be between 0 and 3"
+    assert (module <= 3), "option should be between 0 and 3"
 
     # Open log file
     logger = logit(work_out_path)
 
     # Background module options
-    if (background):
+    if (module <= 1):
         # Input window tile size and eps values for DBSCAN clustering algorithm
         win = int(config['Background Parameters'].get('window'))
-        YFP_eps = float(config['Background Parameters'].get('acceptor_eps'))
-        CFP_eps = float(config['Background Parameters'].get('donor_eps'))
-        eps = [YFP_eps, CFP_eps]
+        eps = float(config['Background Parameters'].get('eps'))
 
         assert (win > 0), "window should be a positive integer"
-        assert (YFP_eps >= 0), "YFP_eps should be a float >= 0"
-        assert (CFP_eps >= 0), "CFP_eps should be a float >= 0"
+        assert (eps >= 0), "eps should be a float >= 0"
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm
-        bs.background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,frange)
+        bs.background(verbose,logger,work_inp_path,work_out_path,module,eps,win,anim_save,h5_save,tiff_save,frange)
 
     # Ratio image module
-    if (ratio):
+    if (module == 2):
         # Input crop dimensions
         crop = config['Ratio Parameters'].get('crop').split(',')
         crop = map(int,crop)
@@ -157,15 +153,15 @@ def main():
         rp.ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange)
 
     # Bleach correction module
-    if (bleach):
+    if (module == 3):
         # Input the bleaching range for donor and accepter channels
-        YFP_range = config['Bleach Parameters'].get('acceptor_bleach_range').split(':')
-        CFP_range = config['Bleach Parameters'].get('donor_bleach_range').split(':')
-        YFP_range = map(int,YFP_range)
-        CFP_range = map(int,CFP_range)
+        acceptor_bound = config['Bleach Parameters'].get('acceptor_bleach_range').split(':')
+        donor_bound = config['Bleach Parameters'].get('donor_bleach_range').split(':')
+        acceptor_bound = map(int,acceptor_bound)
+        donor_bound = map(int,donor_bound)
 
-        assert (YFP_range[1] >= YFP_range[0]), "acceptor_bleach_range last frame should be >= acceptor_bleach_range first frame"
-        assert (CFP_range[1] >= CFP_range[0]), "donor_bleach_range last frame should be >= donor_bleach_range first frame"
+        assert (acceptor_bound[1] >= acceptor_bound[0]), "acceptor_bleach_range last frame should be >= acceptor_bleach_range first frame"
+        assert (donor_bound[1] >= donor_bound[0]), "donor_bleach_range last frame should be >= donor_bleach_range first frame"
 
         # Input bleach correction for fitting and correcting image median intensity
         fitter = config['Bleach Parameters'].get('fit')
@@ -174,7 +170,7 @@ def main():
         assert (fitter in fits), "fit should be either linear or exponential"
 
         # Run bleach correction algorithm
-        rp.bleach(verbose,logger,work_out_path,YFP_range,CFP_range,fitter,h5_save,tiff_save)
+        rp.bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_save,tiff_save)
 
 if __name__ == "__main__":
     main()

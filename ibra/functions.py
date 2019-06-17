@@ -152,105 +152,56 @@ def logit(path):
 
     return logger
 
-def h5(data,val,path,frange=0,rrange=0):
+def h5(data,val,path,frange,flag=0):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
-    if (val+'_frange' in f):
-        orig = np.array(f[val])
-        orange = np.array(f[val+'_frange'])
-        tmp1, tmp2, inter1 = np.intersect1d(frange, orange, return_indices=True)
-
-        print(tmp1)
-
-        if len(inter1) == len(frange):
-            for i,j in enumerate(inter1):
-                print ("Inside", i,j)
-                orig[j] = data[i]
-        else:
-            union = np.union1d(frange, orange)
-            tmp1, tmp2, inter2 = np.intersect1d(union, orange, return_indices=True)
-            current = np.zeros((len(union),data.shape[1],data.shape[2]))
-
-            print (frange,union,orange)
-            print (inter1,inter2)
-            for i,j in enumerate(union):
-                print(j)
-                if (j in frange):
-                    print("Outside", i, j)
-                    current[i] = data[i]
-                else:
-                    print("Limb",inter2[i])
-                    current[i] = orig[inter2[i]]
-
-            del f[val]
-            del f[val+'_frange']
-
-            f.create_dataset(val, data=current, shape=current.shape, dtype=np.uint16, compression='gzip')
-            f.create_dataset(val + '_frange', data=union, shape=union.shape, dtype=np.uint16, compression='gzip')
-
-    else:
-        f.create_dataset(val, data=data, shape=data.shape, dtype=np.uint16, compression='gzip')
-        f.create_dataset(val+'_frange', data=frange, shape=frange.shape, dtype=np.uint16, compression='gzip')
-
-
-        # For manually selected frames, replace data already present in h5 file
-
-    #else:
-        # For continuous frames, delete key and replace
-
-    #    f.create_dataset(val, data=data, shape=data.shape, dtype=np.uint16, compression='gzip')
-    #    # Save the starting frame in the original TIFF stack
-    #    if (val+'_fstart' not in f.attrs and fstart != 0):
-    #        f.attrs[val+'_fstart'] = fstart
-    f.close()
-
-
-def h5o(frange,data,val,path,fstart=0):
-    """Saving the image stack as a .h5 file"""
-    f = h5py.File(path, 'a')
-    if (max(np.ediff1d(frange)) > 1):
+    if (max(np.ediff1d(frange)) > 1 and val + '_frange' in f.attrs):
         # For manually selected frames, replace data already present in h5 file
         orig = f[val]
-        for i,j in enumerate(frange):
+        orange = f.attrs[val + '_frange']
+        assert (sum(~np.isin(frange,orange)) == 0), "Manually selected frames are outside the initial processed range"
+
+        # Find intersection between previous continuous frames and input manual frames
+        inter = np.intersect1d(frange, orange, return_indices=True)[2]
+        for i,j in enumerate(inter):
             orig[j] = data[i]
     else:
-        # For continuous frames, delete key and replace
+        # For continuous frames, delete stack and replace
         if (val in f):
             del f[val]
         f.create_dataset(val, data=data, shape=data.shape, dtype=np.uint16, compression='gzip')
-        # Save the starting frame in the original TIFF stack
-        if (val+'_fstart' not in f.attrs and fstart != 0):
-            f.attrs[val+'_fstart'] = fstart
+
+        # Save the frame range in the original TIFF stack
+        if (val+'_frange' not in f.attrs and flag == True):
+            f.attrs[val+'_frange'] = frange
+
     f.close()
 
-def intensity_plot(nfrange,YFPi,CFPi,path):
+def plot_function(acceptor,donor,path,type):
     """Median channel intensity per frame"""
+    acceptor_plot = sorted(acceptor.items())
+    xa, ya = zip(*acceptor_plot)
+    xa = [x + 1 for x in xa]
+
+    # Sort frames for plotting
+    donor_plot = sorted(donor.items())
+    xd, yd = zip(*donor_plot)
+
+    # Set up plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(nfrange,YFPi,c='r',marker='*')
-    ax.plot(nfrange,CFPi,c='b',marker='*')
+    ax.plot(xa,ya,c='r',marker='*')
+    ax.plot(xa,yd,c='b',marker='*')
 
     plt.xlabel('Frame Number',labelpad=15, fontsize=28)
-    plt.ylabel('Median Channel Intensity',labelpad=15, fontsize=28)
+    plt.ylabel(type,labelpad=15, fontsize=28)
     plt.xticks(fontsize=18)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yticks(fontsize=18)
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(path, bbox_inches='tight')
 
-def pixel_count(nfrange,YFPnz,CFPnz,path):
-    """Non-zero pixel count per frame"""
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(nfrange,YFPnz,c='r',marker='*')
-    ax.plot(nfrange,CFPnz,c='b',marker='*')
-
-    plt.xlabel('Frame Number',labelpad=15, fontsize=28)
-    plt.ylabel('Non-Zero Pixel Count',labelpad=15, fontsize=28)
-    plt.xticks(fontsize=18)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.yticks(fontsize=18)
-    plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
-    plt.savefig(path, bbox_inches='tight')
+    return np.array(xd),np.array(ya),np.array(yd)
 
 def block(data,size):
     """Reshape image stack for faster processing"""
@@ -264,27 +215,18 @@ def tiff(data,path):
         for i in range(data.shape[0]):
             tif.save(data[i,:,:], compress=6)
 
-def prealloc(frange):
-    """Pre-allocate arrays for frame metrics"""
-    fframes = len(frange)
-    YFPnz = np.empty(fframes,dtype=np.uint64)
-    CFPnz = np.empty(fframes,dtype=np.uint64)
-    YFPi = np.zeros(fframes,dtype=np.uint16)
-    CFPi = np.zeros(fframes,dtype=np.uint16)
-
-    return YFPnz,CFPnz,YFPi,CFPi
-
 def exp_func(x, a, b, c):
     """Exponential Function"""
     return a * np.exp(-b * x) + c
 
 def bleach_fit(brange,frange,intensity,fitter):
     """Fit decay in intensity for bleach correction"""
+    intensity_values = np.array([intensity[x] for x in brange])
     if (fitter == 'linear'):
         # Fitting regularized linear model
-        reg = linear_model.Ridge(alpha=10000,fit_intercept=True)
+        reg = linear_model.Ridge(alpha=1000,fit_intercept=True)
         try:
-            reg.fit(brange.reshape(-1, 1), intensity.reshape(-1, 1))
+            reg.fit(brange.reshape(-1, 1), intensity_values.reshape(-1, 1))
         except:
             raise ValueError('Fit not found - try a larger range')
         pred = reg.predict(frange.reshape(-1, 1))
@@ -292,7 +234,7 @@ def bleach_fit(brange,frange,intensity,fitter):
         # Fitting exponential model
         guess = (intensity[0], 0.001, 0)
         try:
-            popt, tmp = curve_fit(exp_func, brange, intensity, p0=guess)
+            popt, tmp = curve_fit(exp_func, brange, intensity_values, p0=guess)
         except:
             raise ValueError('Fit not found - try a larger range')
         pred = exp_func(frange, *popt)

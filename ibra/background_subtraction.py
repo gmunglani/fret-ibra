@@ -154,58 +154,59 @@ class stack(frame):
                 frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
 
-def background(verbose,logger,work_inp_path,work_out_path,eps,win,anim_save,h5_save,tiff_save,frange):
-    # Run through the subtraction on a per frame basis
-    val = ['acceptor','donor']
+def background(verbose,logger,work_inp_path,work_out_path,module,eps,win,anim_save,h5_save,tiff_save,frange):
+    # Run through the donor/acceptor subtraction on a per frame basis
+    if module == 0:
+        val = 'acceptor'
+    else:
+        val = 'donor'
 
-    # Run through both donor and acceptor channels depending on the eps values
-    for a,b in zip(val,eps):
-        if (b == 0):
-            continue
+    assert (eps > 0), "eps value must be a positive float between 0 and 1"
+    assert (eps <= 1), "eps value must be a positive float between 0 and 1"
 
-        # Start time
-        time_start = timer()
+    # Start time
+    time_start = timer()
 
-        # Create stack class from input TIFF file
-        all = stack(work_inp_path,a,b,win)
+    # Create stack class from input TIFF file
+    all = stack(work_inp_path,val,eps,win)
 
-        assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
+    assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
 
-        # Preallocation of tile metrics
-        all.metric_prealloc(frange)
+    # Preallocation of tile metrics
+    all.metric_prealloc(frange)
 
-        # Run through the processing workflow
-        for count in frange:
-            if (verbose):
-                print(a +' (Background Subtraction) Frame Number: ' + str(count + 1))
-            all.properties(count)
-            all.clustering()
-            all.subtraction(logger)
-            all.filter()
-            all.metric_update()
-
-        # End time
-        time_end = timer()
-        time_elapsed = str(int(time_end - time_start))
+    # Run through the processing workflow
+    for count in frange:
         if (verbose):
-            print(a+" (Background Subtraction) Time: " + time_elapsed + " seconds")
+            print(val +' (Background Subtraction) Frame Number: ' + str(count + 1))
+        all.properties(count)
+        all.clustering()
+        all.subtraction(logger)
+        all.filter()
+        all.metric_update()
 
-        # Update log file with background subtraction data
-        all.logger_update(logger,h5_save,time_elapsed,frange)
+    # End time
+    time_end = timer()
+    time_elapsed = str(int(time_end - time_start))
+    if (verbose):
+        print(val+" (Background Subtraction) Time: " + time_elapsed + " seconds")
 
-        # Save animation of frame metrics
-        if (anim_save):
-            background_animation(verbose,all,work_out_path,frange)
+    # Update log file with background subtraction data
+    all.logger_update(logger,h5_save,time_elapsed,frange)
 
-        # Save background subtracted stack as HDF5
-        if (h5_save):
-            h5(all.im_framef,a,work_out_path + '_back.h5',frange=frange)
-            if (verbose):
-                print("Saving " + a + " stack in " + work_out_path + '.h5')
+    # Save animation of frame metrics
+    if (anim_save):
+        background_animation(verbose,all,work_out_path,frange)
 
-        # Save background-subtracted YFP/CFP images as TIFF
-        if (tiff_save):
-            tiff(all.im_framef, work_out_path + '_' + a + '.tif')
-            if (verbose):
-                print("Saving " + a + " TIFF stack in " + work_out_path + '_back_' + a + '.tif')
+    # Save background subtracted stack as HDF5
+    if (h5_save):
+        h5(all.im_framef,val,work_out_path + '_back.h5',frange=frange,flag=True)
+        if (verbose):
+            print("Saving " + val + " HDF5 stack in " + work_out_path + '.h5')
+
+    # Save background-subtracted acceptor/donor images as TIFF
+    if (tiff_save):
+        tiff(all.im_framef, work_out_path + '_' + val + '.tif')
+        if (verbose):
+            print("Saving " + val + " TIFF stack in " + work_out_path + '_back_' + val + '.tif')
 
