@@ -12,9 +12,10 @@ input_path = ./examples/stack
 filename = Test
 ```
 
-The range of frames to be processed is then set with the parameter *frames*. Colon-separated values denote continuous frames, while comma-separated values denote manually selected individual frames. 
+The range of frames to be processed is then set with the parameter *frames*. Colon-separated values denote continuous frames, while comma-separated values denote manually selected individual frames. Furthermore, the *bit_depth* must be set to either 8, 12, or 16.
 ```txt
 frames = 1:6
+bit_depth = 12
 ```
 
 ## Modules
@@ -34,7 +35,7 @@ The background modules' parameters include the *window* (or tile) size (in pixel
 Note, that the higher the *eps* value, more pixels are considered foreground. Very high *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm.
 ```txt
 window = 40
-eps = 0.01
+eps = 0.008
 ```
 
 The background subtraction module can then be run with multiple options including an output HDF5 file (-s) (necessary for further processing), a video animation of per-frame metrics (-a) and a TIFF output file (-t). Option (-e) indicates that all output options are switched on.
@@ -44,10 +45,9 @@ The background subtraction module can then be run with multiple options includin
 Once this module is run, the video animation can be used to optimize the *eps* values visually. As a general rule of thumb, the lower the *eps* value, the better the background subtraction. *eps* values that are too low to create a cluster will be listed in the log file. 
 
 ## Ratiometric processing
-Once both donor and acceptor channels have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image (by the top left and bottom right comma-separated coordinates) to the region of interest to speed up processing time. The default for *crop* is (0,0,0,0), which indicates that it is not functional. Furthermore, the *bit_depth* must be set to either 8, 12, or 16. This module also includes boolean parameters for image registration (*register*) and overlap correction (*union*). 
+Once both donor (*eps* of 0.02 for the example stack) and acceptor channels have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image (by the top left and bottom right comma-separated coordinates) to the region of interest to speed up processing time. The default for *crop* is (0,0,0,0), which indicates that it is not functional. This module also includes boolean parameters for image registration (*register*) and overlap correction (*union*). 
 ```txt
 crop = 0,0,0,0
-bit_depth = 12
 register = 1
 union = 1
 ```

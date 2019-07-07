@@ -91,7 +91,10 @@ class stack(frame):
             # Find the contour centroid and distance from the default
             try:
                 M = cv2.moments(contours[0])
+              #  if (M['m01'] > im_tile_res.shape[1]):
                 tile_prop[i,4] = math.sqrt(((int(M['m10'] / M['m00']) - center) ** 2) + ((int(M['m01'] / M['m00']) - center) ** 2))
+                #else:
+                 #   tile_prop[i,4] = 0
             except:
                 tile_prop[i,4] = 0
 
