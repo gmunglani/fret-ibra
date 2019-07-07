@@ -228,7 +228,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Update log file to save stack metrics
     print_range = [x + 1 for x in frange]
-    if (max(np.ediff1d(frange)) > 1):
+    if (max(np.ediff1d(frange,to_begin=frange[0])) > 1):
         logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(map(str, print_range)) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
     else:
         logger.info('(Ratio Processing) ' + 'frames: ' + str(print_range[0]) + '-' + str(print_range[-1]) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))

@@ -54,7 +54,7 @@ class stack(frame):
         length = len(frange)
         rows = self.height*self.width
         self.im_medianf = np.empty((self.width,self.height,length),dtype=np.float32)
-        self.propf = np.empty((rows,4,length),dtype=np.float32)
+        self.propf = np.empty((rows,5,length),dtype=np.float32)
         self.maskf = np.empty((rows,length),dtype=np.bool)
         self.labelsf = np.empty((rows,length),dtype=np.int8)
         self.im_backf = np.empty((self.width,self.height,length),dtype=np.int16)
@@ -62,11 +62,19 @@ class stack(frame):
 
 
     # Calculate pixel properties per tile
-    def properties(self,count):
+    def properties(self,count,res):
         # Divide frame into tiles and preallocate properties array
         self.ind = frame(self.im_stack,count)
-        tile_prop = np.empty([self.width*self.height,4],dtype=np.float32)
+        tile_prop = np.empty([self.width*self.height,5],dtype=np.float32)
         self.ind.im_tile = block(self.ind.im_frame,self.dim)
+
+        # Create thresholded temporary frame for extracting centroids
+        mult = np.float16(255) / np.float16(res)
+        im_frame_tmp = np.uint8(np.float16(self.ind.im_frame) * mult)
+        tmp,im_frame_tmp_thresh = cv2.threshold(im_frame_tmp, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        im_tile_res = block(im_frame_tmp_thresh,self.dim)
+
 
         # Calculate 3 moments of the pixel intensity distributions and the median intensity
         for i in range(tile_prop.shape[0]):
@@ -75,6 +83,18 @@ class stack(frame):
             tile_prop[i,1] = sp.stats.moment(im_tile_flat,moment=3,axis=0)
             tile_prop[i,2] = sp.stats.moment(im_tile_flat,moment=4,axis=0)
             tile_prop[i,3] = np.median(im_tile_flat)
+
+            # Find contours and the default centroid value
+            contours, tmp = cv2.findContours(im_tile_res[i,:,:], 1, 2)
+            center = im_tile_res.shape[2]/2
+
+            # Find the contour centroid and distance from the default
+            try:
+                M = cv2.moments(contours[0])
+                tile_prop[i,4] = math.sqrt(((int(M['m10'] / M['m00']) - center) ** 2) + ((int(M['m01'] / M['m00']) - center) ** 2))
+            except:
+                tile_prop[i,4] = 0
+
 
         self.ind.im_median = np.copy(tile_prop[:,3])
 
@@ -146,7 +166,7 @@ class stack(frame):
 
     # Use log file to print frame metrics
     def logger_update(self,logger,h5_save,time_elapsed,frange):
-        if (max(np.ediff1d(frange)) > 1):
+        if (max(np.ediff1d(frange,to_begin=frange[0])) > 1):
             logger.info('(Background Subtraction) ' + self.val + '_eps: ' + str(self.eps) + ', frames: ' + ",".join(
                 map(str, [x + 1 for x in frange])) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
         else:
@@ -154,7 +174,7 @@ class stack(frame):
                 frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
 
-def background(verbose,logger,work_inp_path,work_out_path,module,eps,win,anim_save,h5_save,tiff_save,frange):
+def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
     # Run through the donor/acceptor subtraction on a per frame basis
     if module == 0:
         val = 'acceptor'
@@ -179,7 +199,7 @@ def background(verbose,logger,work_inp_path,work_out_path,module,eps,win,anim_sa
     for count in frange:
         if (verbose):
             print(val +' (Background Subtraction) Frame Number: ' + str(count + 1))
-        all.properties(count)
+        all.properties(count,res)
         all.clustering()
         all.subtraction(logger)
         all.filter()

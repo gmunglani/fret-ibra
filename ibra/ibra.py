@@ -116,6 +116,13 @@ def main():
     assert (module >= 0), "option should be between 0 and 3"
     assert (module <= 3), "option should be between 0 and 3"
 
+    # Input TIFF file resolution
+    resolution = int(config['File Parameters'].get('resolution'))
+    res_types = [8, 12, 16]
+
+    assert (resolution in res_types), "resolution must be 8, 12, or 16-bit"
+    res = np.power(2, resolution) - 1
+
     # Open log file
     logger = logit(work_out_path)
 
@@ -130,20 +137,13 @@ def main():
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm
-        bs.background(verbose,logger,work_inp_path,work_out_path,module,eps,win,anim_save,h5_save,tiff_save,frange)
+        bs.background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,anim_save,h5_save,tiff_save,frange)
 
     # Ratio image module
     if (module == 2):
         # Input crop dimensions
         crop = config['Ratio Parameters'].get('crop').split(',')
         crop = map(int,crop)
-
-        # Input TIFF file resolution
-        resolution = int(config['Ratio Parameters'].get('resolution'))
-        res_types = [8, 12, 16]
-
-        assert (resolution in res_types), "resolution must be 8, 12, or 16-bit"
-        res = np.power(2,resolution)-1
 
         # Input options for image registration and the union between donor and accepter channels, and output option for saving in HDF5
         register = config['Ratio Parameters'].getboolean('register')
