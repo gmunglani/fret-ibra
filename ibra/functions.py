@@ -141,6 +141,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     if (verbose):
         print(stack.val+" (Background Animation) Time: " + time_elapsed + " seconds")
 
+
 def logit(path):
     """Logging data"""
     logger = logging.getLogger('back')
@@ -152,56 +153,105 @@ def logit(path):
 
     return logger
 
-def h5(data,val,path,frange,flag=0):
+
+def h5(data,val,path,frange):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
-    if (max(np.ediff1d(frange,to_begin=frange[0])) > 1 and val + '_frange' in f.attrs):
-        # For manually selected frames, replace data already present in h5 file
+    try:
+        # Open existing dataset
         orig = f[val]
-        orange = f.attrs[val + '_frange']
-        assert (sum(~np.isin(frange,orange)) == 0), "Manually selected frames are outside the initial processed range"
+        orange = f.attrs[val+'_frange']
 
-        # Find intersection between previous continuous frames and input manual frames
-        inter = np.intersect1d(frange, orange, return_indices=True)[2]
-        for i,j in enumerate(inter):
-            orig[j] = data[i]
-    else:
-        # For continuous frames, delete stack and replace
+        # Find intersection and differences of frame numbers with existing data
+        inter = np.intersect1d(frange, orange, return_indices=True)[0]
+        diff = np.setdiff1d(frange,orange)
+
+        # Create dictionaries of new and existing data
+        orig_dict = dict(zip(orange,orig))
+        new_dict = dict(zip(frange,data))
+
+        # Save and re-write data in the dictionary
+        for key in np.unique(np.concatenate((inter,diff),axis=0)):
+            orig_dict[key] = new_dict[key]
+
+
+        # Sort frames by increasing frame number
+        orig_dict_sorted = sorted(orig_dict.items())
+        res_range, res = zip(*orig_dict_sorted)
+        res = np.array(res)
+
+        # Delete existing HDF5 dataset
         if (val in f):
             del f[val]
-        f.create_dataset(val, data=data, shape=data.shape, dtype=np.uint16, compression='gzip')
 
-        # Save the frame range in the original TIFF stack
-        if (val+'_frange' not in f.attrs and flag == True):
-            f.attrs[val+'_frange'] = frange
+    except:
+        # If no stack is present, create it
+        res = np.array(data)
+        res_range = frange
+
+    finally:
+        # Save the image pixel data
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+
+        # Save the frame range
+        f.attrs[val+'_frange'] = res_range
 
     f.close()
 
-def plot_function(acceptor,donor,path,type):
+
+
+def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
     """Median channel intensity per frame"""
     acceptor_plot = sorted(acceptor.items())
     xa, ya = zip(*acceptor_plot)
-    xa = [x + 1 for x in xa]
+    xplot = [x + 1 for x in xa]
 
     # Sort frames for plotting
     donor_plot = sorted(donor.items())
-    xd, yd = zip(*donor_plot)
+    xsave, yd = zip(*donor_plot)
+
+    if (h5_save):
+        vals = ['acceptori','donori','acceptornz','donornz']
+        if (ylabel == 'Median Channel Intensity'):
+            names = vals[:2]
+        elif (ylabel == 'Foreground Pixel Count'):
+            names = vals[2:]
+
+        # Convert to arrays
+        xsave = np.array(xsave)
+        ya = np.array(ya)
+        yd = np.array(yd)
+
+        # Open HDF5 dataset
+        f = h5py.File(work_out_path+'_back_ratio.h5', 'a')
+
+        # Save dictionary data in HDF5 dataset
+        if (names[0] in f):
+            del f[names[0]]
+        f.create_dataset(names[0], data=ya, shape=ya.shape, dtype=np.uint16, compression='gzip')
+
+        if (names[1] in f):
+            del f[names[1]]
+        f.create_dataset(names[1], data=yd, shape=yd.shape, dtype=np.uint16, compression='gzip')
+        f.close()
+
 
     # Set up plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xa,ya,c='r',marker='*')
-    ax.plot(xa,yd,c='b',marker='*')
+    ax.plot(xplot,ya,c='r',marker='*')
+    ax.plot(xplot,yd,c='b',marker='*')
 
     plt.xlabel('Frame Number',labelpad=15, fontsize=28)
-    plt.ylabel(type,labelpad=15, fontsize=28)
+    plt.ylabel(ylabel,labelpad=15, fontsize=28)
     plt.xticks(fontsize=18)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yticks(fontsize=18)
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
-    plt.savefig(path, bbox_inches='tight')
+    plt.savefig(work_out_path + name, bbox_inches='tight')
 
-    return np.array(xd),np.array(ya),np.array(yd)
+    return np.array(xsave)
+
 
 def block(data,size):
     """Reshape image stack for faster processing"""
@@ -209,19 +259,24 @@ def block(data,size):
             .swapaxes(1, 2)
             .reshape(-1, size, size))
 
+
 def tiff(data,path):
     """Write out a TIFF stack"""
     with TiffWriter(path) as tif:
         for i in range(data.shape[0]):
             tif.save(data[i,:,:], compress=6)
 
+
 def exp_func(x, a, b, c):
     """Exponential Function"""
     return a * np.exp(-b * x) + c
 
+
 def bleach_fit(brange,frange,intensity,fitter):
     """Fit decay in intensity for bleach correction"""
     intensity_values = np.array([intensity[x] for x in brange])
+
+    # Choose type of decay
     if (fitter == 'linear'):
         # Fitting regularized linear model
         reg = linear_model.Ridge(alpha=1000,fit_intercept=True)
@@ -230,11 +285,12 @@ def bleach_fit(brange,frange,intensity,fitter):
         except:
             raise ValueError('Fit not found - try a larger range')
         pred = reg.predict(frange.reshape(-1, 1))
+
     elif (fitter == 'exponential'):
         # Fitting exponential model
         guess = (intensity[0], 0.001, 0)
         try:
-            popt, tmp = curve_fit(exp_func, brange, intensity_values, p0=guess)
+            popt, _ = curve_fit(exp_func, brange, intensity_values, p0=guess)
         except:
             raise ValueError('Fit not found - try a larger range')
         pred = exp_func(frange, *popt)

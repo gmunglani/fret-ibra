@@ -70,13 +70,12 @@ class stack(frame):
 
         # Create thresholded temporary frame for extracting centroids
         mult = np.float16(255) / np.float16(res)
-        im_frame_tmp = np.uint8(np.float16(self.ind.im_frame) * mult)
-        tmp,im_frame_tmp_thresh = cv2.threshold(im_frame_tmp, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        im_frame_con = np.uint8(np.float16(self.ind.im_frame) * mult)
+        _,im_frame_con_thresh = cv2.threshold(im_frame_con, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-        im_tile_res = block(im_frame_tmp_thresh,self.dim)
+        im_tile_res = block(im_frame_con_thresh,self.dim)
 
-
-        # Calculate 3 moments of the pixel intensity distributions and the median intensity
+        # Calculate 3 moments of the pixel intensity distributions, the median intensity, and the contour centriod distance
         for i in range(tile_prop.shape[0]):
             im_tile_flat = np.ravel(self.ind.im_tile[i,:,:])
             tile_prop[i,0] = sp.stats.moment(im_tile_flat,moment=2,axis=0)
@@ -85,16 +84,13 @@ class stack(frame):
             tile_prop[i,3] = np.median(im_tile_flat)
 
             # Find contours and the default centroid value
-            contours, tmp = cv2.findContours(im_tile_res[i,:,:], 1, 2)
+            contours, _ = cv2.findContours(im_tile_res[i,:,:], 1, 2)
             center = im_tile_res.shape[2]/2
 
             # Find the contour centroid and distance from the default
             try:
                 M = cv2.moments(contours[0])
-              #  if (M['m01'] > im_tile_res.shape[1]):
                 tile_prop[i,4] = math.sqrt(((int(M['m10'] / M['m00']) - center) ** 2) + ((int(M['m01'] / M['m00']) - center) ** 2))
-                #else:
-                 #   tile_prop[i,4] = 0
             except:
                 tile_prop[i,4] = 0
 
@@ -177,6 +173,7 @@ class stack(frame):
                 frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
 
+
 def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
     # Run through the donor/acceptor subtraction on a per frame basis
     if module == 0:
@@ -223,7 +220,7 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
 
     # Save background subtracted stack as HDF5
     if (h5_save):
-        h5(all.im_framef,val,work_out_path + '_back.h5',frange=frange,flag=True)
+        h5(all.im_framef,val,work_out_path + '_back.h5',frange=frange)
         if (verbose):
             print("Saving " + val + " HDF5 stack in " + work_out_path + '.h5')
 
