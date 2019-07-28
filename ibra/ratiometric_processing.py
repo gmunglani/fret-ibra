@@ -32,14 +32,11 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
     except:
         raise ImportError(work_out_path + "_back_ratio.h5 not found")
 
-    # Testing input values
-    acceptor_bound = np.subtract(acceptor_bound,1)
-    donor_bound = np.subtract(donor_bound,1)
-
-    # Fit and correct donor channel intensity
+    # Fit and acceptor donor channel intensity
     nframes = acceptor.shape[0]
     if (acceptor_bound[1] > acceptor_bound[0]):
         # Asset range of frames
+        acceptor_bound = np.subtract(acceptor_bound, 1)
         assert (sum(~np.isin(acceptor_bound,ratio_frange)) == 0), "acceptor_bleach_range should be within processed frame range"
 
         # Range of frames to fit(brange), and range to correct(frange)
@@ -67,6 +64,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
     # Fit and correct acceptor channel intensity
     if (donor_bound[1] > donor_bound[0]):
         # Assert range of frames
+        donor_bound = np.subtract(donor_bound, 1)
         assert (sum(~np.isin(donor_bound, ratio_frange)) == 0), "donor_bleach_range should be within processed frame range"
 
         # Range of frames to fit(brange), and range to correct(frange)
