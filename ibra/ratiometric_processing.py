@@ -32,7 +32,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
     except:
         raise ImportError(work_out_path + "_back_ratio.h5 not found")
 
-    # Fit and acceptor donor channel intensity
+    # Fit and correct acceptor channel intensity
     nframes = acceptor.shape[0]
     if (acceptor_bound[1] > acceptor_bound[0]):
         # Asset range of frames
@@ -61,7 +61,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
             h5(acceptorb,'acceptorb',work_out_path+'_back_ratio.h5',ratio_frange)
             print("Saving acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
 
-    # Fit and correct acceptor channel intensity
+    # Fit and correct donor channel intensity
     if (donor_bound[1] > donor_bound[0]):
         # Assert range of frames
         donor_bound = np.subtract(donor_bound, 1)
@@ -89,9 +89,6 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
             h5(donorb,'donorb',work_out_path+'_back_ratio.h5',ratio_frange)
             print("Saving donor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
 
-    # Create plot to show median intensity over frame number after bleaching
-    nfrange = time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
-
     # End time
     time_end = timer()
     time_elapsed = str(int(time_end - time_start))
@@ -103,6 +100,9 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
     logger.info('(Bleach Correction) ' + 'acceptor_bleach_frames: ' + str(acceptor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
                 + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
+
+    # Create plot to show median intensity over frame number after bleaching
+    nfrange = time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
