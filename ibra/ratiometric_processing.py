@@ -59,7 +59,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         # Save acceptor bleaching factors
         if (h5_save):
             h5(acceptorb,'acceptorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print("Saving acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
+            print(("Saving acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5'))
 
     # Fit and correct donor channel intensity
     if (donor_bound[1] > donor_bound[0]):
@@ -82,7 +82,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Update image median intensity
         donori_frange = np.array([donori[x] for x in ratio_frange])
-        donori = dict(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
+        donori = dict(list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1))))))
 
         # Save donor bleaching factors
         if (h5_save):
@@ -180,19 +180,19 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Input files into dictionaries
         f2 = h5py.File(work_out_path + '_back_ratio.h5', 'r')
         ratio_frange = np.array(f2.attrs['ratio_frange'])
-        acceptornz = dict(zip(ratio_frange, np.array(f2['acceptornz'])))
-        donornz = dict(zip(ratio_frange, np.array(f2['donornz'])))
-        acceptori = dict(zip(ratio_frange, np.array(f2['acceptori'])))
-        donori = dict(zip(ratio_frange, np.array(f2['donori'])))
+        acceptornz = dict(list(zip(ratio_frange, np.array(f2['acceptornz']))))
+        donornz = dict(list(zip(ratio_frange, np.array(f2['donornz']))))
+        acceptori = dict(list(zip(ratio_frange, np.array(f2['acceptori']))))
+        donori = dict(list(zip(ratio_frange, np.array(f2['donori']))))
         f2.close()
     except:
         # Initialize empty dictionaries
         acceptornz, donornz, acceptori, donori = {},{},{},{}
 
-
+    print(brange,frange)
     # Loop through frames
     mult = np.float16(255)/np.float16(res)
-    for count,frame in zip(frange,brange):
+    for count,frame in list(zip(frange,brange)):
         if (verbose):
             print ("(Ratio Processing) Frame Number: " + str(count+1))
 
@@ -207,8 +207,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         _, B_thresh = cv2.threshold(np.uint8(np.float16(donorc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
 
         # Setting values below threshold to zero
-        acceptorc[frame,:,:] *= A_thresh/255
-        donorc[frame,:,:] *= B_thresh/255
+        acceptorc[frame,:,:] *= np.uint16(A_thresh/255)
+        donorc[frame,:,:] *= np.uint16(B_thresh/255)
 
         # Consider only foreground pixel intensity overlapping between donor and acceptor channels to ensure channels overlap perfectly
         if (union):
@@ -232,12 +232,12 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     time_end = timer()
     time_elapsed = str(int(time_end - time_start))
     if (verbose):
-        print("(Ratio Processing) Time: " + time_elapsed + " seconds")
+        print(("(Ratio Processing) Time: " + time_elapsed + " seconds"))
 
     # Update log file to save stack metrics
     print_range = [x + 1 for x in frange]
     if (max(np.ediff1d(frange,to_begin=frange[0])) > 1):
-        logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(map(str, print_range)) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
+        logger.info('(Ratio Processing) ' + 'frames: ' + ",".join(list(map(str, print_range))) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
     else:
         logger.info('(Ratio Processing) ' + 'frames: ' + str(print_range[0]) + '-' + str(print_range[-1]) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
@@ -246,6 +246,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     nbrange = time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Channel Intensity',h5_save)
     _ = time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground Pixel Count',h5_save)
 
+    print(nbrange)
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
         ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc,dtype=np.float16), where=donorc!= 0)
@@ -254,16 +255,16 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
-            h5(acceptorc[nbrange,:,:],'acceptor',work_out_path+'_back_ratio.h5',nbrange)
-            h5(donorc[nbrange,:,:],'donor',work_out_path+'_back_ratio.h5',nbrange)
-            h5(ratio[nbrange,:,:], 'ratio', work_out_path + '_back_ratio.h5',nbrange)
+            h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',nbrange)
+            h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',nbrange)
+            h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',nbrange)
 
             if (verbose):
-                print("Saving acceptor, donor and ratio stacks in " + work_out_path+'_back_ratio.h5')
+                print(("Saving acceptor, donor and ratio stacks in " + work_out_path+'_back_ratio.h5'))
     
         # Save NON-bleach corrected ratio image as TIFF
         if (tiff_save):
             tiff(ratio, work_out_path + '_back_ratio.tif')
     
             if (verbose):
-                print("Saving unbleached ratio TIFF stack in " + work_out_path + '_back_ratio.tif')
+                print(("Saving unbleached ratio TIFF stack in " + work_out_path + '_back_ratio.tif'))

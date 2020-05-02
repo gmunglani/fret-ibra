@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3.8
 #  -*- coding: utf-8 -*-
 """
 FRET-IBRA is used to create fully processed ratiometric images from input donor and acceptor intensity TIFF images
@@ -14,19 +14,19 @@ import numpy as np
 __version__='0.3.1'
 
 def usage():
-    print("")
-    print("Program: FRET-IBRA (FRET-Image Background-subtracted Ratiometric Analysis)")
-    print("Version: {}".format(__version__))
-    print("")
-    print("Usage:  ibra -c <config file> [Options]")
-    print("")
-    print("Options: -t   Output TIFF stack")
-    print("         -v   Print progress output (verbose)")
-    print("         -s   Save as HDF5 file")
-    print("         -a   Save background subtraction animation (only background module)")
-    print("         -e   Use all output options")
-    print("         -h   Print usage")
-    print("")
+    print((""))
+    print(("Program: FRET-IBRA (FRET-Image Background-subtracted Ratiometric Analysis)"))
+    print(("Version: {}".format(__version__)))
+    print((""))
+    print(("Usage:  ibra -c <config file> [Options]"))
+    print((""))
+    print(("Options: -t   Output TIFF stack"))
+    print(("         -v   Print progress output (verbose)"))
+    print(("         -s   Save as HDF5 file"))
+    print(("         -a   Save background subtraction animation (only background module)"))
+    print(("         -e   Use all output options"))
+    print(("         -h   Print usage"))
+    print((""))
 
 def main():
     # Print usage file
@@ -51,7 +51,6 @@ def main():
                 cfname = arg
 
             if opt in ('-t'):
-                print("hERE")
                 tiff_save = True
 
             if opt in ('-v'):
@@ -74,8 +73,10 @@ def main():
     config.read(cfname)
 
     # Initialize input/output paths
-    inp_path = config['File Parameters'].get('input_path').encode("utf-8")
-    fname = config['File Parameters'].get('filename').encode("utf-8")
+    inp_path = config['File Parameters'].get('input_path').encode("utf-8").decode()
+    fname = config['File Parameters'].get('filename').encode("utf-8").decode()
+    # inp_path = config['File Parameters'].get('input_path').decode()
+    # fname = config['File Parameters'].get('filename').decode()
     current_path = os.getcwd()
 
     # Finalize input/output paths
@@ -143,7 +144,7 @@ def main():
     if (module == 2):
         # Input crop dimensions
         crop = config['Ratio Parameters'].get('crop').split(',')
-        crop = map(int,crop)
+        crop = list(map(int,crop))
 
         # Input options for image registration and the union between donor and accepter channels, and output option for saving in HDF5
         register = config['Ratio Parameters'].getboolean('register')
@@ -157,8 +158,8 @@ def main():
         # Input the bleaching range for donor and accepter channels
         acceptor_bound = config['Bleach Parameters'].get('acceptor_bleach_range').split(':')
         donor_bound = config['Bleach Parameters'].get('donor_bleach_range').split(':')
-        acceptor_bound = map(int,acceptor_bound)
-        donor_bound = map(int,donor_bound)
+        acceptor_bound = list(map(int,acceptor_bound))
+        donor_bound = list(map(int,donor_bound))
 
         assert (acceptor_bound[1] >= acceptor_bound[0]), "acceptor_bleach_range last frame should be >= acceptor_bleach_range first frame"
         assert (donor_bound[1] >= donor_bound[0]), "donor_bleach_range last frame should be >= donor_bleach_range first frame"

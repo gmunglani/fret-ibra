@@ -27,7 +27,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     def data(i, stack, line):
         ax1.clear()
         line1 = ax1.plot_surface(stack.X, stack.Y, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
-        ax1.set_title("{} Frame: {}".format(stack.val, frange[i] + 1))
+        ax1.set_title("{} Frame: {}".format(stack.val.capitalize(), frange[i] + 1))
         ax1.set_zlim(0, np.amax(stack.im_medianf))
         ax1.set_xticklabels([])
         ax1.set_yticklabels([])
@@ -139,7 +139,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     time_end = timer()
     time_elapsed = str(int(time_end - time_start))
     if (verbose):
-        print(stack.val+" (Background Animation) Time: " + time_elapsed + " seconds")
+        print((stack.val+" (Background Animation) Time: " + time_elapsed + " seconds"))
 
 
 def logit(path):
@@ -158,32 +158,42 @@ def h5(data,val,path,frange):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
+
+    # try:
+    # Open existing dataset
+    orig = f[val]
+    orange = f.attrs[val+'_frange']
+
+    # Find intersection and differences of frame numbers with existing data
+    inter = np.intersect1d(frange, orange, return_indices=True)[0]
+    diff = np.setdiff1d(frange,orange)
+
+    # Create dictionaries of new and existing data
+    orig_dict = dict(list(zip(orange,orig)))
+    new_dict = dict(list(zip(frange,data)))
+
+    # Save and re-write data in the dictionary
+    print(frange,orange)
+    print(inter,diff)
+    print(np.unique(np.concatenate((inter,diff),axis=0)))
+    print(new_dict.keys())
+    for key in np.unique(np.concatenate((inter,diff),axis=0)):
+        orig_dict[key] = new_dict[key]
+
+    # Sort frames by increasing frame number
+    orig_dict_sorted = sorted(orig_dict.items())
+    res_range, res = list(zip(*orig_dict_sorted))
+    res = np.array(res)
+
+    print(res.shape)
+    print(f[val])
     try:
-        # Open existing dataset
-        orig = f[val]
-        orange = f.attrs[val+'_frange']
-
-        # Find intersection and differences of frame numbers with existing data
-        inter = np.intersect1d(frange, orange, return_indices=True)[0]
-        diff = np.setdiff1d(frange,orange)
-
-        # Create dictionaries of new and existing data
-        orig_dict = dict(zip(orange,orig))
-        new_dict = dict(zip(frange,data))
-
-        # Save and re-write data in the dictionary
-        for key in np.unique(np.concatenate((inter,diff),axis=0)):
-            orig_dict[key] = new_dict[key]
-
-
-        # Sort frames by increasing frame number
-        orig_dict_sorted = sorted(orig_dict.items())
-        res_range, res = zip(*orig_dict_sorted)
-        res = np.array(res)
 
         # Delete existing HDF5 dataset
         if (val in f):
             del f[val]
+
+        print(f[val])
 
     except:
         # If no stack is present, create it
@@ -196,20 +206,18 @@ def h5(data,val,path,frange):
 
         # Save the frame range
         f.attrs[val+'_frange'] = res_range
-
-    f.close()
-
+        f.close()
 
 
 def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
     """Median channel intensity per frame"""
     acceptor_plot = sorted(acceptor.items())
-    xa, ya = zip(*acceptor_plot)
+    xa, ya = list(zip(*acceptor_plot))
     xplot = [x + 1 for x in xa]
 
     # Sort frames for plotting
     donor_plot = sorted(donor.items())
-    xsave, yd = zip(*donor_plot)
+    xsave, yd = list(zip(*donor_plot))
 
     if (h5_save):
         vals = ['acceptori','donori','acceptornz','donornz']
