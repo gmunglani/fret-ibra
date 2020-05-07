@@ -25,7 +25,7 @@ setup(
     entry_points={
         'console_scripts': ['ibra=ibra.__main__:main'],
     },
-    python_requires='>=3.8',
+    python_requires='>=3.5',
     keywords=['opencv', 'background subtraction', 'DBSCAN clustering', 'FRET imaging', 'ratiometric'],
     zip_safe=True,
 )
