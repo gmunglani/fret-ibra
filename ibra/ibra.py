@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.8
+#!/usr/bin/env python3
 #  -*- coding: utf-8 -*-
 """
 FRET-IBRA is used to create fully processed ratiometric images from input donor and acceptor intensity TIFF images
