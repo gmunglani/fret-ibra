@@ -75,8 +75,6 @@ def main():
     # Initialize input/output paths
     inp_path = config['File Parameters'].get('input_path').encode("utf-8").decode()
     fname = config['File Parameters'].get('filename').encode("utf-8").decode()
-    # inp_path = config['File Parameters'].get('input_path').decode()
-    # fname = config['File Parameters'].get('filename').decode()
     current_path = os.getcwd()
 
     # Finalize input/output paths

@@ -59,7 +59,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         # Save acceptor bleaching factors
         if (h5_save):
             h5(acceptorb,'acceptorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print(("Saving acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5'))
+            print(("Saving Acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5'))
 
     # Fit and correct donor channel intensity
     if (donor_bound[1] > donor_bound[0]):
@@ -87,7 +87,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         # Save donor bleaching factors
         if (h5_save):
             h5(donorb,'donorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print("Saving donor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
+            print("Saving Donor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
 
     # End time
     time_end = timer()
@@ -115,14 +115,14 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
             h5(ratio,'ratio',work_out_path+'_back_ratio.h5',nfrange)
             
             if (verbose):
-                print("Saving ratio stack in " + work_out_path+'_back_ratio.h5')
+                print("Saving Ratio stack in " + work_out_path+'_back_ratio.h5')
 
         # Save bleach corrected ratio image as TIFF
         if (tiff_save):
             tiff(ratio, work_out_path + '_back_ratio_bleach.tif')
             
             if (verbose):
-                print("Saving bleached ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif')
+                print("Saving bleached Ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif')
 
 
 def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange):
@@ -140,14 +140,14 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         acceptor = np.array(f['acceptor'])
         acceptor_frange = np.array(f.attrs['acceptor_frange'])
     except:
-        raise ImportError("acceptor stack background not processed")
+        raise ImportError("Acceptor stack background not processed")
 
     # Input donor stack
     try:
         donor = np.array(f['donor'])
         donor_frange = np.array(f.attrs['donor_frange'])
     except:
-        raise ImportError("donor stack background not processed")
+        raise ImportError("Donor stack background not processed")
 
     f.close()
 
@@ -162,7 +162,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         crop[3] = Xdim
 
     # Testing input values
-    test.assert_array_equal (acceptor_frange,donor_frange), "acceptor and donor stacks have differing frame numbers"
+    test.assert_array_equal (acceptor_frange,donor_frange), "Acceptor and Donor stacks have different frame numbers"
     assert (sum(~np.isin(frange,acceptor_frange)) == 0), "background subtracted stacks have not been processed for all frame values"
     assert (crop[2] >= crop[0]), "crop[2] must be greater than crop[0]"
     assert (crop[3] >= crop[1]), "crop[3] must be greater than crop[1]"
@@ -189,7 +189,6 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Initialize empty dictionaries
         acceptornz, donornz, acceptori, donori = {},{},{},{}
 
-    print(brange,frange)
     # Loop through frames
     mult = np.float16(255)/np.float16(res)
     for count,frame in list(zip(frange,brange)):
@@ -243,10 +242,9 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
 
     # Create plot to showcase median intensity over frame number and the number of foreground pixels per channel (NON-bleach corrected)
-    nbrange = time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Channel Intensity',h5_save)
-    _ = time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground Pixel Count',h5_save)
+    time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Channel Intensity',h5_save)
+    time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground Pixel Count',h5_save)
 
-    print(nbrange)
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
         ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc,dtype=np.float16), where=donorc!= 0)
@@ -255,16 +253,16 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
-            h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',nbrange)
-            h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',nbrange)
-            h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',nbrange)
+            h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',frange)
+            h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',frange)
+            h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',frange)
 
             if (verbose):
-                print(("Saving acceptor, donor and ratio stacks in " + work_out_path+'_back_ratio.h5'))
+                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_back_ratio.h5'))
     
         # Save NON-bleach corrected ratio image as TIFF
         if (tiff_save):
             tiff(ratio, work_out_path + '_back_ratio.tif')
     
             if (verbose):
-                print(("Saving unbleached ratio TIFF stack in " + work_out_path + '_back_ratio.tif'))
+                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_back_ratio.tif'))

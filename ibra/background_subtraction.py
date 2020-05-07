@@ -198,7 +198,7 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
     # Run through the processing workflow
     for count in frange:
         if (verbose):
-            print((val +' (Background Subtraction) Frame Number: ' + str(count + 1)))
+            print((val.capitalize() +' (Background Subtraction) Frame Number: ' + str(count + 1)))
         all.properties(count,res)
         all.clustering()
         all.subtraction(logger)
@@ -209,7 +209,7 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
     time_end = timer()
     time_elapsed = str(int(time_end - time_start))
     if (verbose):
-        print((val+" (Background Subtraction) Time: " + time_elapsed + " seconds"))
+        print((val.capitalize() +" (Background Subtraction) Time: " + time_elapsed + " seconds"))
 
     # Update log file with background subtraction data
     all.logger_update(logger,h5_save,time_elapsed,frange)
@@ -222,11 +222,11 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
     if (h5_save):
         h5(all.im_framef,val,work_out_path + '_back.h5',frange=frange)
         if (verbose):
-            print(("Saving " + val + " HDF5 stack in " + work_out_path + '.h5'))
+            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5'))
 
     # Save background-subtracted acceptor/donor images as TIFF
     if (tiff_save):
         tiff(all.im_framef, work_out_path + '_' + val + '.tif')
         if (verbose):
-            print(("Saving " + val + " TIFF stack in " + work_out_path + '_back_' + val + '.tif'))
+            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif'))
 

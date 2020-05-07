@@ -139,7 +139,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     time_end = timer()
     time_elapsed = str(int(time_end - time_start))
     if (verbose):
-        print((stack.val+" (Background Animation) Time: " + time_elapsed + " seconds"))
+        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " seconds"))
 
 
 def logit(path):
@@ -158,55 +158,41 @@ def h5(data,val,path,frange):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
+    if val in f:
+        # Open existing dataset
+        orig = f[val]
+        orange = f.attrs[val+'_frange']
 
-    # try:
-    # Open existing dataset
-    orig = f[val]
-    orange = f.attrs[val+'_frange']
+        # Create dictionaries of new and existing data
+        orig_dict = dict(zip(orange,orig))
+        new_dict = dict(zip(frange,data))
 
-    # Find intersection and differences of frame numbers with existing data
-    inter = np.intersect1d(frange, orange, return_indices=True)[0]
-    diff = np.setdiff1d(frange,orange)
+        # Save and re-write data in the dictionary
+        for key in frange:
+            orig_dict[key] = new_dict[key]
 
-    # Create dictionaries of new and existing data
-    orig_dict = dict(list(zip(orange,orig)))
-    new_dict = dict(list(zip(frange,data)))
-
-    # Save and re-write data in the dictionary
-    print(frange,orange)
-    print(inter,diff)
-    print(np.unique(np.concatenate((inter,diff),axis=0)))
-    print(new_dict.keys())
-    for key in np.unique(np.concatenate((inter,diff),axis=0)):
-        orig_dict[key] = new_dict[key]
-
-    # Sort frames by increasing frame number
-    orig_dict_sorted = sorted(orig_dict.items())
-    res_range, res = list(zip(*orig_dict_sorted))
-    res = np.array(res)
-
-    print(res.shape)
-    print(f[val])
-    try:
+        # Sort frames by increasing frame number
+        orig_dict_sorted = sorted(orig_dict.items())
+        res_range, res = list(zip(*orig_dict_sorted))
+        res = np.array(res)
 
         # Delete existing HDF5 dataset
         if (val in f):
             del f[val]
 
-        print(f[val])
-
-    except:
+    else:
         # If no stack is present, create it
         res = np.array(data)
         res_range = frange
 
-    finally:
-        # Save the image pixel data
-        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    # Save the image pixel data
+    f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
 
-        # Save the frame range
-        f.attrs[val+'_frange'] = res_range
-        f.close()
+    # Save the frame range
+    f.attrs[val + '_frange'] = res_range
+
+    # Close dataset
+    f.close()
 
 
 def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
@@ -257,8 +243,6 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
     plt.yticks(fontsize=18)
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(work_out_path + name, bbox_inches='tight')
-
-    return np.array(xsave)
 
 
 def block(data,size):
