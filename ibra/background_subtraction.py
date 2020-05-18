@@ -31,12 +31,12 @@ class stack():
         # Import stack
         im_path =  work_inp_path + '_' + stack.val + '.tif'
         self.im_stack = pims.TiffStack_pil(im_path)
+        stack.siz1,stack.siz2 = self.im_stack.frame_shape
 
     # Set class frame parameters
     @classmethod
     def set_frame_parameters(cls,win):
         # Find frame size and set window size
-        cls.siz1,cls.siz2 = stack.im_stack.frame_shape
         cls.dim = np.int16(cls.siz2/win)
         cls.height = np.int16(win)
         cls.width = np.int16(cls.siz1/cls.dim)
