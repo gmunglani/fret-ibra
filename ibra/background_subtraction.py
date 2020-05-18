@@ -22,7 +22,7 @@ from itertools import repeat
 
 # #############################################################################
 
-# Create total image stack class
+# Create image stack class
 class stack():
         # Set eps and image type
     def __init__(self,work_inp_path,val):
@@ -104,7 +104,7 @@ class stack():
             self.metric_update(future.result())
 
 
-# Create single frame class with frame count
+# Create single image frame class
 class frame(stack):
     def __init__(self,im_frame,count,pos):
         self.im_frame = im_frame
