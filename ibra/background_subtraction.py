@@ -31,12 +31,12 @@ class stack():
         # Import stack
         im_path =  work_inp_path + '_' + stack.val + '.tif'
         self.im_stack = pims.TiffStack_pil(im_path)
-        stack.siz1,stack.siz2 = self.im_stack.frame_shape
 
     # Set class frame parameters
     @classmethod
     def set_frame_parameters(cls,win):
         # Find frame size and set window size
+        cls.siz1,cls.siz2 = stack.im_stack.frame_shape
         cls.dim = np.int16(cls.siz2/win)
         cls.height = np.int16(win)
         cls.width = np.int16(cls.siz1/cls.dim)
@@ -56,7 +56,7 @@ class stack():
         cls.eps = eps
 
 
-    # Preallocate arrays for speed on a per frame basis
+    # Preallocate arrays for speed
     def metric_prealloc(self):
         length = len(stack.frange)
         rows = self.height*self.width
@@ -89,8 +89,9 @@ class stack():
                 stack.frange[-1]+1) + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
 
-    # Run background subtraction workflow
+    # Run background subtraction stack workflow
     def stack_workflow(self):
+        # Create frame class and submit processes
         with concurrent.futures.ProcessPoolExecutor() as executor:
             futures = []
             for pos, count in enumerate(stack.frange):
@@ -98,8 +99,10 @@ class stack():
                 process = executor.submit(fr.frame_workflow)
                 futures.append(process)
 
+        # Combine parallelized output into updated metrics
         for future in concurrent.futures.as_completed(futures):
             self.metric_update(future.result())
+
 
 # Create single frame class with frame count
 class frame(stack):
@@ -206,7 +209,7 @@ class frame(stack):
         self.subtraction()
         self.filter()
 
-        return (self.pos,self.im_median,self.XY_interp_back,self.im_frame,self.tile_prop,self.core_samples_mask,self.labels)
+        return (self.pos, self.im_median, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
 
 
 def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
@@ -230,7 +233,6 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
     # Assign frame parameters
     all.set_frame_parameters(win)
 
-    # frange = [10, 12, 45, 34]
     # Assign class constants
     all.set_class_constants(verbose,res,logger,frange,eps)
 
