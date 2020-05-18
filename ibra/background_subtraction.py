@@ -202,7 +202,7 @@ class frame(stack):
 
     # Run frame background subtraction workflow
     def frame_workflow(self):
-        if (stack.verbose):
+        if (super().verbose):
             print((super().val.capitalize() + ' (Background Subtraction) Frame Number: ' + str(self.count + 1)))
         self.properties()
         self.clustering()
