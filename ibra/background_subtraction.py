@@ -25,13 +25,14 @@ from itertools import repeat
 # Create image stack class
 class stack():
         # Set eps and image type
-    def __init__(self,work_inp_path,val):
+    def __init__(self,work_inp_path,val,ext):
         stack.val = val
 
         # Import stack
-        im_path =  work_inp_path + '_' + stack.val + '.tif'
-        self.im_stack = pims.TiffStack_pil(im_path)
-        stack.siz1,stack.siz2 = self.im_stack.frame_shape
+        im_path =  work_inp_path + '_' + stack.val + '.' + ext
+        self.im_stack = pims.open(im_path)
+        stack.siz1, stack.siz2 = self.im_stack.frame_shape
+
 
     # Set class frame parameters
     @classmethod
@@ -212,7 +213,7 @@ class frame(stack):
         return (self.pos, self.im_median, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
 
 
-def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
+def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
     # Run through the donor/acceptor subtraction on a per frame basis
     if module == 0:
         val = 'acceptor'
@@ -226,8 +227,9 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
     time_start = timer()
 
     # Create stack class from input TIFF file
-    all = stack(work_inp_path,val)
+    all = stack(work_inp_path,val,ext)
 
+    print(frange)
     assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
 
     # Assign frame parameters

@@ -75,6 +75,7 @@ def main():
     # Initialize input/output paths
     inp_path = config['File Parameters'].get('input_path').encode("utf-8").decode()
     fname = config['File Parameters'].get('filename').encode("utf-8").decode()
+    ext = config['File Parameters'].get('extension').encode("utf-8").decode()
     current_path = os.getcwd()
 
     # Finalize input/output paths
@@ -136,7 +137,7 @@ def main():
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm
-        bs.background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,anim_save,h5_save,tiff_save,frange)
+        bs.background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange)
 
     # Ratio image module
     if (module == 2):
