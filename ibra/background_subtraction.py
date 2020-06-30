@@ -229,7 +229,6 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     # Create stack class from input TIFF file
     all = stack(work_inp_path,val,ext)
 
-    print(frange)
     assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
 
     # Assign frame parameters
