@@ -247,22 +247,37 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
+        # Divide acceptor by donor stack
         ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc,dtype=np.float16), where=donorc!= 0)
         ratio = np.nan_to_num(ratio)
-        ratio = np.uint8(ratio * 255.0 / np.amax(ratio))
+
+        # Flatten array to find intensity percentiles
+        ratio_flat = np.ravel(ratio)
+        perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)],[10,90],interpolation='nearest')
+
+        # Find 10th/90th percentile ratio and additive constant for scaling
+        perc_ratio = perc[0]/perc[1]
+        const = 0.123 * (1 - perc_ratio)
+
+        # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
+        ratio = np.uint8(230.0 * (ratio/perc[1] - perc_ratio + const)/(1.0 - perc_ratio + const))
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
+            h5_time_start = timer()
             h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',frange)
             h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',frange)
             h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',frange)
+            h5_time_end = timer()
 
             if (verbose):
-                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_back_ratio.h5'))
+                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)) + " second(s)]"))
     
         # Save NON-bleach corrected ratio image as TIFF
         if (tiff_save):
+            tiff_time_start = timer()
             tiff(ratio, work_out_path + '_back_ratio.tif')
-    
+            tiff_time_end = timer()
+
             if (verbose):
-                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_back_ratio.tif'))
+                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_back_ratio.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)) + " second(s)]"))

@@ -256,15 +256,23 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     if (anim_save):
         background_animation(verbose,all,work_out_path,frange)
 
+       # if (verbose):
+
     # Save background subtracted stack as HDF5
     if (h5_save):
+        h5_time_start = timer()
         h5(all.im_framef,val,work_out_path + '_back.h5',frange=frange)
+        h5_time_end = timer()
+
         if (verbose):
-            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5'))
+            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)) + " second(s)]"))
 
     # Save background-subtracted acceptor/donor images as TIFF
     if (tiff_save):
+        tiff_time_start = timer()
         tiff(all.im_framef, work_out_path + '_' + val + '.tif')
+        tiff_time_end = timer()
+
         if (verbose):
-            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif'))
+            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)) + " second(s)]"))
 
