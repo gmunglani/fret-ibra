@@ -9,7 +9,7 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.animation as animation
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FormatStrFormatter, PercentFormatter
 import mpl_toolkits.mplot3d.axes3d as p3
 import logging
 from timeit import default_timer as timer
@@ -137,9 +137,9 @@ def background_animation(verbose,stack,work_out_path,frange):
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
     if (verbose):
-        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " seconds"))
+        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " second(s)"))
 
 
 def logit(path):
@@ -207,9 +207,9 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     if (h5_save):
         vals = ['acceptori','donori','acceptornz','donornz']
-        if (ylabel == 'Median Channel Intensity'):
+        if (ylabel == 'Median Channel Intensity Ratio'):
             names = vals[:2]
-        elif (ylabel == 'Foreground Pixel Count'):
+        elif (ylabel == 'Foreground Pixel Ratio'):
             names = vals[2:]
 
         # Convert to arrays
@@ -233,11 +233,12 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Set up plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xplot,ya,c='r',marker='*')
-    ax.plot(xplot,yd,c='b',marker='*')
+    ax.plot(xplot,ya,c='darkgrey',marker='*')
+    ax.plot(xplot,yd,c='k',marker='*')
 
-    plt.xlabel('Frame Number',labelpad=15, fontsize=28)
-    plt.ylabel(ylabel,labelpad=15, fontsize=28)
+    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    plt.ylabel(ylabel,labelpad=15, fontsize=22)
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=2))
     plt.xticks(fontsize=18)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yticks(fontsize=18)

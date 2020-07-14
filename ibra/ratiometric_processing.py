@@ -191,6 +191,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Loop through frames
     mult = np.float16(255)/np.float16(res)
+    ires = 1/np.float16(res)
+    ipix = 100/(Xdim*Ydim)
     for count,frame in list(zip(frange,brange)):
         if (verbose):
             print ("(Ratio Processing) Frame Number: " + str(count+1))
@@ -220,18 +222,18 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             donorc[frame,:,:] *= C
 
         # Count number of non-zero pixels per frame
-        acceptornz[count] = np.count_nonzero(A_thresh)
-        donornz[count] = np.count_nonzero(B_thresh)
+        acceptornz[count] = np.count_nonzero(A_thresh)*ipix
+        donornz[count] = np.count_nonzero(B_thresh)*ipix
 
         # Find the median non-zero intensity pixels per frame
-        acceptori[count] = ndimage.median(acceptorc[frame,:,:],labels=C)
-        donori[count] = ndimage.median(donorc[frame,:,:],labels=C)
+        acceptori[count] = ndimage.median(acceptorc[frame,:,:],labels=C)*ires
+        donori[count] = ndimage.median(donorc[frame,:,:],labels=C)*ires
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
     if (verbose):
-        print(("(Ratio Processing) Time: " + time_elapsed + " seconds"))
+        print(("(Ratio Processing) Time: " + time_elapsed + " second(s)"))
 
     # Update log file to save stack metrics
     print_range = [x + 1 for x in frange]
@@ -242,8 +244,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
 
     # Create plot to showcase median intensity over frame number and the number of foreground pixels per channel (NON-bleach corrected)
-    time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Channel Intensity',h5_save)
-    time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground Pixel Count',h5_save)
+    time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Channel Intensity Ratio',h5_save)
+    time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground Pixel Ratio',h5_save)
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
@@ -265,7 +267,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Set max/min values and apply median filter
         ratio[ratio <= 0.0] = 0.0
         ratio[ratio >= 255.0] = 255.0
-        ratio = ndimage.median_filter(np.unit8(ratio),size=5)
+        ratio = ndimage.median_filter(np.uint8(ratio),size=5)
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
@@ -276,7 +278,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             h5_time_end = timer()
 
             if (verbose):
-                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)) + " second(s)]"))
+                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start) + 1) + " second(s)]"))
     
         # Save NON-bleach corrected ratio image as TIFF
         if (tiff_save):
@@ -285,4 +287,4 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             tiff_time_end = timer()
 
             if (verbose):
-                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_back_ratio.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)) + " second(s)]"))
+                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_back_ratio.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]"))

@@ -245,9 +245,9 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
     if (verbose):
-        print((val.capitalize() +" (Background Subtraction) Time: " + time_elapsed + " seconds"))
+        print((val.capitalize() +" (Background Subtraction) Time: " + time_elapsed + " second(s)"))
 
     # Update log file with background subtraction data
     all.logger_update(h5_save,time_elapsed)
@@ -265,7 +265,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
         h5_time_end = timer()
 
         if (verbose):
-            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)) + " second(s)]"))
+            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)+1) + " second(s)]"))
 
     # Save background-subtracted acceptor/donor images as TIFF
     if (tiff_save):
@@ -274,5 +274,5 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
         tiff_time_end = timer()
 
         if (verbose):
-            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)) + " second(s)]"))
+            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]"))
 
