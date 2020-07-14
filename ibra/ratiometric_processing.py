@@ -157,9 +157,9 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Set default values for crop
     if (crop[2] == 0):
-        crop[2] = Ydim
+        crop[2] = Xdim
     if (crop[3] == 0):
-        crop[3] = Xdim
+        crop[3] = Ydim
 
     # Testing input values
     test.assert_array_equal (acceptor_frange,donor_frange), "Acceptor and Donor stacks have different frame numbers"
@@ -167,9 +167,9 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     assert (crop[2] >= crop[0]), "crop[2] must be greater than crop[0]"
     assert (crop[3] >= crop[1]), "crop[3] must be greater than crop[1]"
     assert (crop[0] >= 0), "crop[0] must be >= 0"
-    assert (crop[2] <= Ydim), "crop[2] must be <= than the width of the image"
+    assert (crop[2] <= Xdim), "crop[2] must be <= than the width of the image"
     assert (crop[1] >= 0), "crop[1] must be >= 0"
-    assert (crop[3] <= Xdim), "crop[3] must be <= than the height of the image"
+    assert (crop[3] <= Ydim), "crop[3] must be <= than the height of the image"
 
     # Image crop
     acceptorc = acceptor[:,crop[1]:crop[3],crop[0]:crop[2]]
@@ -253,14 +253,19 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
         # Flatten array to find intensity percentiles
         ratio_flat = np.ravel(ratio)
-        perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)],[10,90],interpolation='nearest')
+        perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)],[10,90,100],interpolation='nearest')
 
         # Find 10th/90th percentile ratio and additive constant for scaling
         perc_ratio = perc[0]/perc[1]
         const = 0.123 * (1 - perc_ratio)
 
         # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
-        ratio = np.uint8(230.0 * (ratio/perc[1] - perc_ratio + const)/(1.0 - perc_ratio + const))
+        ratio = 230.0 * (ratio/perc[1] - perc_ratio + const)/(1.0 - perc_ratio + const)
+
+        # Set max/min values and apply median filter
+        ratio[ratio <= 0.0] = 0.0
+        ratio[ratio >= 255.0] = 255.0
+        ratio = ndimage.median_filter(np.unit8(ratio),size=5)
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
