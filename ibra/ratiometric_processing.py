@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # Bleach correction module
-def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_save,tiff_save):
+def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5_save,tiff_save):
     # Start time
     time_start = timer()
 
@@ -34,6 +34,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
     # Fit and correct acceptor channel intensity
     nframes = acceptor.shape[0]
+    ires = 1/np.float16(res)
     if (acceptor_bound[1] > acceptor_bound[0]):
         # Asset range of frames
         acceptor_bound = np.subtract(acceptor_bound, 1)
@@ -54,7 +55,9 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Update image median intensity
         acceptori_frange = np.array([acceptori[x] for x in ratio_frange])
-        acceptori = dict(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
+        acceptori = list(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
+        acceptori = [x*ires for x in np.float16(acceptori)]
+        acceptori = dict(acceptori)
 
         # Save acceptor bleaching factors
         if (h5_save):
@@ -82,7 +85,9 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Update image median intensity
         donori_frange = np.array([donori[x] for x in ratio_frange])
-        donori = dict(list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1))))))
+        donori = list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
+        donori = [x*ires for x in np.float16(donori)]
+        donori = dict(donori)
 
         # Save donor bleaching factors
         if (h5_save):
