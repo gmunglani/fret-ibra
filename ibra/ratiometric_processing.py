@@ -192,9 +192,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     # Loop through frames    
     mult = np.float16(255)/np.float16(res)
     for count,frame in list(zip(frange,brange)):
-    
-        #print("count = ",count, ",frame = ",frame) #######################################
-        
+            
         if (verbose):
             print ("(Ratio Processing) Frame Number: " + str(count+1))
 
@@ -254,15 +252,10 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc,dtype=np.float16), where=donorc!= 0)
         ratio = np.nan_to_num(ratio)
         
-        #print("min, max after division: ",ratio.min(), " ,",ratio.max()) #######################################
-
         # Flatten array to find intensity percentiles
         ratio_flat = np.ravel(ratio)
         perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)],[10,90],interpolation='nearest')
         
-
-        #print("10th perc.: ",perc[0], " , 90th perc.: ", perc[1]) #######################################
-
         # Find 10th/90th percentile ratio and additive constant for scaling
         perc_ratio = perc[0]/perc[1]
         const = 0.123 * (1 - perc_ratio)
@@ -274,9 +267,6 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         ratio[ratio <= 0.0] = 0.0
         ratio[ratio >= 255.0] = 255.0
         ratio = ndimage.median_filter(np.uint8(ratio),size=5)
-        
-        #print("min, max final: ", ratio.min(), " ,", ratio.max()) #######################################
-
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
