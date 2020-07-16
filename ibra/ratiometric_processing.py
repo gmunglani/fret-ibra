@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # Bleach correction module
-def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_save,tiff_save):
+def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_save,tiff_save,frange):
     # Start time
     time_start = timer()
 
@@ -111,7 +111,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Save bleach corrected ratio image
         if (h5_save):
-            h5(ratio,'ratio',work_out_path+'_back_ratio.h5',nfrange)
+            h5(ratio,'ratio',work_out_path+'_back_ratio.h5',frange)
             
             if (verbose):
                 print("Saving Ratio stack in " + work_out_path+'_back_ratio.h5')

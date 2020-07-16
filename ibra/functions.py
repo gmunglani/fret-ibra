@@ -293,6 +293,7 @@ def bleach_fit(brange,frange,intensity,fitter):
 
     return corr
 
+
 def ratio_calc(acceptorc,donorc):
     # Divide acceptor by donor stack
     ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc, dtype=np.float16), where=donorc != 0)
