@@ -7,7 +7,7 @@ import numpy as np
 import numpy.testing as test
 import imreg_dft as ird
 import cv2
-from functions import h5, logit, time_evolution, tiff, bleach_fit
+from functions import h5, logit, time_evolution, tiff, bleach_fit, ratio_calc
 from timeit import default_timer as timer
 import h5py
 import matplotlib
@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # Bleach correction module
-def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5_save,tiff_save):
+def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5_save,tiff_save,frange):
     # Start time
     time_start = timer()
 
@@ -55,9 +55,10 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
 
         # Update image median intensity
         acceptori_frange = np.array([acceptori[x] for x in ratio_frange])
-        acceptori = list(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
-        acceptori = [x*ires for x in np.float16(acceptori)]
-        acceptori = dict(acceptori)
+        acceptori = dict(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
+        #acceptori = np.float16(list(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1))))))
+        #acceptori = [x*ires for x in acceptori]
+        #acceptori = {k: np.float16(v) * ires for (k, v) in acceptori.items()}
 
         # Save acceptor bleaching factors
         if (h5_save):
@@ -85,9 +86,10 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
 
         # Update image median intensity
         donori_frange = np.array([donori[x] for x in ratio_frange])
-        donori = list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
-        donori = [x*ires for x in np.float16(donori)]
-        donori = dict(donori)
+        donori = dict(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
+        #donori = list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
+        #donori = [x*ires for x in np.float16(donori)]
+        #donori = dict(donori)
 
         # Save donor bleaching factors
         if (h5_save):
@@ -96,38 +98,44 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
 
     if (verbose):
-        print("(Bleach Correction) Time: " + time_elapsed + " seconds")
+        print("(Bleach Correction) Time: " + time_elapsed + " second(s)")
 
     # Update log file
     logger.info('(Bleach Correction) ' + 'acceptor_bleach_frames: ' + str(acceptor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
                 + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
+    print(acceptori)
+    print(donori)
     # Create plot to show median intensity over frame number after bleaching
     nfrange = time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
-        ratio = np.true_divide(acceptor, donor, out=np.zeros_like(acceptor,dtype=np.float16), where=donor!= 0)
-        ratio = np.nan_to_num(ratio)
-        ratio = np.uint8(ratio * 255.0 / np.amax(ratio))
+        # Calculate ratio stack
+        ratio = ratio_calc(acceptor,donor)
 
+        print(ratio.shape)
         # Save bleach corrected ratio image
         if (h5_save):
-            h5(ratio,'ratio',work_out_path+'_back_ratio.h5',nfrange)
-            
+            h5_time_start = timer()
+            h5(ratio,'ratio',work_out_path+'_back_ratio.h5',frange)
+            h5_time_end = timer()
+
             if (verbose):
-                print("Saving Ratio stack in " + work_out_path+'_back_ratio.h5')
+                print("Saving Ratio stack in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start) + 1) + " second(s)]")
 
         # Save bleach corrected ratio image as TIFF
         if (tiff_save):
+            tiff_time_start = timer()
             tiff(ratio, work_out_path + '_back_ratio_bleach.tif')
-            
+            tiff_time_end = timer()
+
             if (verbose):
-                print("Saving bleached Ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif')
+                print("Saving bleached Ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]")
 
 
 def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange):
@@ -194,10 +202,12 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Initialize empty dictionaries
         acceptornz, donornz, acceptori, donori = {},{},{},{}
 
-    # Loop through frames
+    # Set up constants for loop
     mult = np.float16(255)/np.float16(res)
     ires = 1/np.float16(res)
     ipix = 100/(Xdim*Ydim)
+
+    # Loop through frames
     for count,frame in list(zip(frange,brange)):
         if (verbose):
             print ("(Ratio Processing) Frame Number: " + str(count+1))
@@ -254,25 +264,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
-        # Divide acceptor by donor stack
-        ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc,dtype=np.float16), where=donorc!= 0)
-        ratio = np.nan_to_num(ratio)
-
-        # Flatten array to find intensity percentiles
-        ratio_flat = np.ravel(ratio)
-        perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)],[10,90,100],interpolation='nearest')
-
-        # Find 10th/90th percentile ratio and additive constant for scaling
-        perc_ratio = perc[0]/perc[1]
-        const = 0.123 * (1 - perc_ratio)
-
-        # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
-        ratio = 230.0 * (ratio/perc[1] - perc_ratio + const)/(1.0 - perc_ratio + const)
-
-        # Set max/min values and apply median filter
-        ratio[ratio <= 0.0] = 0.0
-        ratio[ratio >= 255.0] = 255.0
-        ratio = ndimage.median_filter(np.uint8(ratio),size=5)
+        # Calculate ratio stack
+        ratio = ratio_calc(acceptorc,donorc)
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):

@@ -18,6 +18,7 @@ from skimage.external.tifffile import TiffWriter
 import os
 from scipy.optimize import curve_fit
 from sklearn import linear_model
+from scipy import ndimage
 
 rcParams['font.family'] = 'serif'
 
@@ -164,8 +165,8 @@ def h5(data,val,path,frange):
         orange = f.attrs[val+'_frange']
 
         # Create dictionaries of new and existing data
-        orig_dict = dict(zip(orange,orig))
-        new_dict = dict(zip(frange,data))
+        orig_dict = dict(list(zip(orange,orig)))
+        new_dict = dict(list(zip(frange,data)))
 
         # Save and re-write data in the dictionary
         for key in frange:
@@ -292,3 +293,26 @@ def bleach_fit(brange,frange,intensity,fitter):
     corr = np.divide(pred[0], pred)
 
     return corr
+
+def ratio_calc(acceptorc,donorc):
+    # Divide acceptor by donor stack
+    ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc, dtype=np.float16), where=donorc != 0)
+    ratio = np.nan_to_num(ratio)
+
+    # Flatten array to find intensity percentiles
+    ratio_flat = np.ravel(ratio)
+    perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [10, 90], interpolation='nearest')
+
+    # Find 10th/90th percentile ratio and additive constant for scaling
+    perc_ratio = perc[0] / perc[1]
+    const = 0.123 * (1 - perc_ratio)
+
+    # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
+    ratio = 230.0 * (ratio / perc[1] - perc_ratio + const) / (1.0 - perc_ratio + const)
+
+    # Set max/min values and apply median filter
+    ratio[ratio <= 0.0] = 0.0
+    ratio[ratio >= 255.0] = 255.0
+    ratio = ndimage.median_filter(np.uint8(ratio), size=5)
+
+    return ratio
