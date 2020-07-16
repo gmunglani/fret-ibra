@@ -7,7 +7,7 @@ import numpy as np
 import numpy.testing as test
 import imreg_dft as ird
 import cv2
-from functions import h5, logit, time_evolution, tiff, bleach_fit
+from functions import h5, logit, time_evolution, tiff, bleach_fit, ratio_calc
 from timeit import default_timer as timer
 import h5py
 import matplotlib
@@ -54,7 +54,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Update image median intensity
         acceptori_frange = np.array([acceptori[x] for x in ratio_frange])
-        acceptori = dict(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
+        acceptori = dict(list(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1))))))
 
         # Save acceptor bleaching factors
         if (h5_save):
@@ -106,9 +106,8 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
-        ratio = np.true_divide(acceptor, donor, out=np.zeros_like(acceptor,dtype=np.float16), where=donor!= 0)
-        ratio = np.nan_to_num(ratio)
-        ratio = np.uint8(ratio * 255.0 / np.amax(ratio))
+        # Calculate ratio image
+        ratio = ratio_calc(acceptor, donor)
 
         # Save bleach corrected ratio image
         if (h5_save):
@@ -247,25 +246,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
-        # Divide acceptor by donor stack
-        ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc,dtype=np.float16), where=donorc!= 0)
-        ratio = np.nan_to_num(ratio)
-
-        # Flatten array to find intensity percentiles
-        ratio_flat = np.ravel(ratio)
-        perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)],[10,90],interpolation='nearest')
-
-        # Find 10th/90th percentile ratio and additive constant for scaling
-        perc_ratio = perc[0]/perc[1]
-        const = 0.123 * (1 - perc_ratio)
-
-        # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
-        ratio = np.uint8(230.0 * (ratio/perc[1] - perc_ratio + const)/(1.0 - perc_ratio + const))
-
-        # Set max/min values and apply median filter
-        ratio[ratio <= 0.0] = 0.0
-        ratio[ratio >= 255.0] = 255.0
-        ratio = ndimage.median_filter(np.uint8(ratio),size=5)
+        # Calculate ratio image
+        ratio = ratio_calc(acceptorc, donorc)
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
