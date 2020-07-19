@@ -34,7 +34,6 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
 
     # Fit and correct acceptor channel intensity
     nframes = acceptor.shape[0]
-    ires = 1/np.float16(res)
     if (acceptor_bound[1] > acceptor_bound[0]):
         # Asset range of frames
         acceptor_bound = np.subtract(acceptor_bound, 1)
@@ -55,10 +54,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
 
         # Update image median intensity
         acceptori_frange = np.array([acceptori[x] for x in ratio_frange])
-        acceptori = dict(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
-        #acceptori = np.float16(list(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1))))))
-        #acceptori = [x*ires for x in acceptori]
-        #acceptori = {k: np.float16(v) * ires for (k, v) in acceptori.items()}
+        acceptori = dict(zip(ratio_frange, np.float16(np.multiply(acceptori_frange,acceptorb.reshape(-1)))))
 
         # Save acceptor bleaching factors
         if (h5_save):
@@ -86,10 +82,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
 
         # Update image median intensity
         donori_frange = np.array([donori[x] for x in ratio_frange])
-        donori = dict(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
-        #donori = list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1)))))
-        #donori = [x*ires for x in np.float16(donori)]
-        #donori = dict(donori)
+        donori = dict(zip(ratio_frange, np.float16(np.multiply(donori_frange,donorb.reshape(-1)))))
 
         # Save donor bleaching factors
         if (h5_save):
@@ -108,17 +101,14 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5
                 + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
-    print(acceptori)
-    print(donori)
     # Create plot to show median intensity over frame number after bleaching
-    nfrange = time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
+    time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
         # Calculate ratio stack
         ratio = ratio_calc(acceptor,donor)
 
-        print(ratio.shape)
         # Save bleach corrected ratio image
         if (h5_save):
             h5_time_start = timer()
@@ -269,9 +259,14 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
+            acceptori_brange = np.array([acceptori[a] for a in brange])
+            donori_brange = np.array([donori[a] for a in brange])
+
             h5_time_start = timer()
             h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',frange)
             h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',frange)
+            h5(acceptori_brange, 'acceptori', work_out_path + '_back_ratio.h5', frange)
+            h5(donori_brange, 'donori', work_out_path + '_back_ratio.h5', frange)
             h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',frange)
             h5_time_end = timer()
 

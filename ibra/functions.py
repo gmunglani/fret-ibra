@@ -155,18 +155,23 @@ def logit(path):
     return logger
 
 
-def h5(data,val,path,frange):
+def h5(data,valo,path,frange):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
+    if 'acceptor' in valo:
+        val = 'acceptor'
+    else:
+        val = 'donor'
+
     if val in f:
         # Open existing dataset
-        orig = f[val]
-        orange = f.attrs[val+'_frange']
+        orig = f[valo]
+        orange = f.attrs[val + '_frange']
 
         # Create dictionaries of new and existing data
-        orig_dict = dict(list(zip(orange,orig)))
-        new_dict = dict(list(zip(frange,data)))
+        orig_dict = dict(zip(orange, orig))
+        new_dict = dict(zip(frange, data))
 
         # Save and re-write data in the dictionary
         for key in frange:
@@ -179,7 +184,7 @@ def h5(data,val,path,frange):
 
         # Delete existing HDF5 dataset
         if (val in f):
-            del f[val]
+            del f[valo]
 
     else:
         # If no stack is present, create it
@@ -187,7 +192,10 @@ def h5(data,val,path,frange):
         res_range = frange
 
     # Save the image pixel data
-    f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    if valo == val:
+        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    else:
+        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
 
     # Save the frame range
     f.attrs[val + '_frange'] = res_range
