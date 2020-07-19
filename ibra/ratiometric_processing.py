@@ -102,7 +102,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Create plot to show median intensity over frame number after bleaching
-    nfrange = time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
+    time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
@@ -249,11 +249,16 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Calculate ratio image
         ratio = ratio_calc(acceptorc, donorc)
 
+        acceptori_brange = np.array([acceptori[a] for a in brange])
+        donori_brange = np.array([donori[a] for a in brange])
+
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
             h5_time_start = timer()
             h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',frange)
             h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',frange)
+            h5(acceptori_brange,'acceptori',work_out_path+'_back_ratio.h5',frange)
+            h5(donori_brange,'donori',work_out_path+'_back_ratio.h5',frange)
             h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',frange)
             h5_time_end = timer()
 
