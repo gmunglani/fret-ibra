@@ -54,12 +54,11 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Update image median intensity
         acceptori_frange = np.array([acceptori[x] for x in ratio_frange])
-        acceptori = dict(list(zip(ratio_frange, np.uint16(np.multiply(acceptori_frange,acceptorb.reshape(-1))))))
+        acceptori = dict(list(zip(ratio_frange, np.float16(np.multiply(acceptori_frange,acceptorb.reshape(-1))))))
 
         # Save acceptor bleaching factors
         if (h5_save):
             h5(acceptorb,'acceptorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print(("Saving Acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5'))
 
     # Fit and correct donor channel intensity
     if (donor_bound[1] > donor_bound[0]):
@@ -82,19 +81,18 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Update image median intensity
         donori_frange = np.array([donori[x] for x in ratio_frange])
-        donori = dict(list(zip(ratio_frange, np.uint16(np.multiply(donori_frange,donorb.reshape(-1))))))
+        donori = dict(list(zip(ratio_frange, np.float16(np.multiply(donori_frange,donorb.reshape(-1))))))
 
         # Save donor bleaching factors
         if (h5_save):
             h5(donorb,'donorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print("Saving Donor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
 
     if (verbose):
-        print("(Bleach Correction) Time: " + time_elapsed + " seconds")
+        print("(Bleach Correction) Time: " + time_elapsed + " second(s)")
 
     # Update log file
     logger.info('(Bleach Correction) ' + 'acceptor_bleach_frames: ' + str(acceptor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
@@ -111,17 +109,21 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Save bleach corrected ratio image
         if (h5_save):
+            h5_time_start = timer()
             h5(ratio,'ratio',work_out_path+'_back_ratio.h5',frange)
-            
+            h5_time_end = timer()
+
             if (verbose):
-                print("Saving Ratio stack in " + work_out_path+'_back_ratio.h5')
+                print(("Saving Ratio stack in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)+1) + " second(s)]"))
 
         # Save bleach corrected ratio image as TIFF
         if (tiff_save):
+            tiff_time_start = timer()
             tiff(ratio, work_out_path + '_back_ratio_bleach.tif')
-            
+            tiff_time_end = timer()
+
             if (verbose):
-                print("Saving bleached Ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif')
+                print(("Saving bleached Ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]"))
 
 
 def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange):
@@ -190,6 +192,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
     # Loop through frames
     mult = np.float16(255)/np.float16(res)
+    ires = 1/np.float16(res)
+    ipix = 100/(Xdim*Ydim)
     for count,frame in list(zip(frange,brange)):
         if (verbose):
             print ("(Ratio Processing) Frame Number: " + str(count+1))
@@ -219,12 +223,12 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             donorc[frame,:,:] *= C
 
         # Count number of non-zero pixels per frame
-        acceptornz[count] = np.count_nonzero(A_thresh)
-        donornz[count] = np.count_nonzero(B_thresh)
+        acceptornz[count] = np.count_nonzero(A_thresh)*ipix
+        donornz[count] = np.count_nonzero(B_thresh)*ipix
 
         # Find the median non-zero intensity pixels per frame
-        acceptori[count] = ndimage.median(acceptorc[frame,:,:],labels=C)
-        donori[count] = ndimage.median(donorc[frame,:,:],labels=C)
+        acceptori[count] = ndimage.median(acceptorc[frame,:,:],labels=C)*ires
+        donori[count] = ndimage.median(donorc[frame,:,:],labels=C)*ires
 
     # End time
     time_end = timer()

@@ -9,7 +9,7 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.animation as animation
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FormatStrFormatter, PercentFormatter
 import mpl_toolkits.mplot3d.axes3d as p3
 import logging
 from timeit import default_timer as timer
@@ -140,7 +140,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     time_end = timer()
     time_elapsed = str(int(time_end - time_start))
     if (verbose):
-        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " seconds"))
+        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " second(s)"))
 
 
 def logit(path):
@@ -192,7 +192,10 @@ def h5(data,valo,path,frange):
         res_range = frange
 
     # Save the image pixel data
-    f.create_dataset(valo, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    if valo == val:
+        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    else:
+        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
 
     # Save the frame range
     f.attrs[val + '_frange'] = res_range
@@ -239,11 +242,12 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Set up plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xplot,ya,c='r',marker='*')
-    ax.plot(xplot,yd,c='b',marker='*')
+    ax.plot(xplot,ya,c='darkgrey',marker='*')
+    ax.plot(xplot,yd,c='k',marker='*')
 
-    plt.xlabel('Frame Number',labelpad=15, fontsize=28)
-    plt.ylabel(ylabel,labelpad=15, fontsize=28)
+    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    plt.ylabel(ylabel,labelpad=15, fontsize=22)
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=2))
     plt.xticks(fontsize=18)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
     plt.yticks(fontsize=18)
