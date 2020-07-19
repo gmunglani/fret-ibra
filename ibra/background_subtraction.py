@@ -14,7 +14,7 @@ import cv2
 import math
 import pims
 import os
-from functions import background_animation, logit, h5, block, tiff
+from functions import background_animation, logit, h5, block, tiff, background_plots
 from timeit import default_timer as timer
 from skimage.external.tifffile import TiffWriter
 
@@ -53,7 +53,8 @@ class stack(frame):
     def metric_prealloc(self,frange):
         length = len(frange)
         rows = self.height*self.width
-        self.im_medianf = np.empty((self.width,self.height,length),dtype=np.float32)
+        #self.im_medianf = np.empty((self.width,self.height,length),dtype=np.float32)
+        self.im_medianf = np.empty((self.siz1,self.siz2,length),dtype=np.uint16)
         self.propf = np.empty((rows,5,length),dtype=np.float32)
         self.maskf = np.empty((rows,length),dtype=np.bool)
         self.labelsf = np.empty((rows,length),dtype=np.int8)
@@ -68,12 +69,17 @@ class stack(frame):
         tile_prop = np.empty([self.width*self.height,5],dtype=np.float32)
         self.ind.im_tile = block(self.ind.im_frame,self.dim)
 
+        self.ind.orig_frame = np.copy(self.ind.im_frame)
         # Create thresholded temporary frame for extracting centroids
         mult = np.float16(255) / np.float16(res)
         im_frame_con = np.uint8(np.float16(self.ind.im_frame) * mult)
         _,im_frame_con_thresh = cv2.threshold(im_frame_con, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
         im_tile_res = block(im_frame_con_thresh,self.dim)
+
+        self.im_side = np.ravel(self.ind.im_tile[0, :, :])
+        self.im_side2 = np.ravel(self.ind.im_tile[553, :, :])
+
 
         # Calculate 3 moments of the pixel intensity distributions, the median intensity, and the contour centriod distance
         for i in range(tile_prop.shape[0]):
@@ -93,7 +99,6 @@ class stack(frame):
                 tile_prop[i,4] = math.sqrt(((int(M['m10'] / M['m00']) - center) ** 2) + ((int(M['m01'] / M['m00']) - center) ** 2))
             except:
                 tile_prop[i,4] = 0
-
 
         self.ind.im_median = np.copy(tile_prop[:,3])
 
@@ -154,7 +159,8 @@ class stack(frame):
 
     # Update metrics on a per frame basis
     def metric_update(self):
-        self.im_medianf[:,:,self.saver] = np.reshape(self.ind.im_median,(self.width,self.height))
+        self.im_medianf[:,:,self.saver] = self.ind.orig_frame
+       # self.im_framef[:,:,self.saver] = np.reshape(self.ind.im_median,(self.width,self.height))
         self.im_backf[:,:,self.saver] = self.ind.XY_interp_back
         self.im_framef[self.saver,:,:] = self.ind.im_frame
         self.propf[:,:,self.saver] = self.ind.tile_prop
@@ -213,6 +219,8 @@ def background(verbose,logger,work_inp_path,work_out_path,res,module,eps,win,ani
 
     # Update log file with background subtraction data
     all.logger_update(logger,h5_save,time_elapsed,frange)
+
+    background_plots(all,work_out_path)
 
     # Save animation of frame metrics
     if (anim_save):

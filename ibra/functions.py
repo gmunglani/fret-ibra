@@ -4,7 +4,6 @@ Miscellaneous functions for plotting, logging, data output, fitting etc
 """
 
 import numpy as np
-import matplotlib
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -19,6 +18,7 @@ import os
 from scipy.optimize import curve_fit
 from scipy import ndimage
 from sklearn import linear_model
+from mpl_toolkits.mplot3d import Axes3D
 
 rcParams['font.family'] = 'serif'
 
@@ -27,7 +27,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     """Background subtraction result per frame video"""
     def data(i, stack, line):
         ax1.clear()
-        line1 = ax1.plot_surface(stack.X, stack.Y, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
+        line1 = ax1.plot_surface(X1, Y1, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
         ax1.set_title("{} Frame: {}".format(stack.val.capitalize(), frange[i] + 1))
         ax1.set_zlim(0, np.amax(stack.im_medianf))
         ax1.set_xticklabels([])
@@ -66,8 +66,8 @@ def background_animation(verbose,stack,work_out_path,frange):
         varn = stack.propf[:,:,i]
         xyz = varn[stack.maskf[:,i]]
         xyz2 = varn[[not i for i in stack.maskf[:,i]]]
-        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='blue')
-        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='red', s=80)
+        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
+        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=80)
 
         line = [line1, line2, line3, line4]
         return line,
@@ -112,7 +112,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     # Define grid for tiled image
     X1, Y1 = np.int16(np.meshgrid(np.arange(stack.siz2), np.arange(stack.siz1)))
 
-    line1 = ax1.plot_surface(stack.X,stack.Y,stack.im_medianf[:,:,0],cmap=cm.bwr)
+    line1 = ax1.plot_surface(X1,Y1,stack.im_medianf[:,:,0],cmap=cm.bwr)
     line2 = ax2.plot_surface(stack.X,stack.Y,stack.im_backf[:,:,0],cmap=cm.bwr)
     line3 = ax3.plot_surface(X1,Y1,stack.im_framef[0,:,:],cmap=cm.bwr)
     line4 = ax4.scatter(0.5, 0.5, 0.5, c='red')
@@ -325,3 +325,112 @@ def ratio_calc(acceptorc,donorc):
     ratio = ndimage.median_filter(np.uint8(ratio), size=5)
 
     return ratio
+
+
+def background_plots(stack,work_out_path):
+    # Full grid X and Y
+    X1, Y1 = np.int16(np.meshgrid(np.arange(stack.siz2), np.arange(stack.siz1)))
+
+    #################################################################################################################################3
+    # Contour plot for original image (optional gaussian if needed) with colorbar and isoline heignt
+    fig, ax = plt.subplots(figsize=(12, 8))
+    #stack.im_medianf[:,:,0] = ndimage.gaussian_filter(stack.im_medianf[:,:,0],sigma=0.2)
+    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,500,1000,2500],alpha=0.3,cmap='seismic')
+    plt.colorbar(),stack.im_medianf[:,:,0].shape
+    plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
+
+    # Set axis
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.tick_params(
+        axis='both',  # changes apply to the x-axis
+        which='both',  # both major and minor ticks are affected
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off
+        left=False,
+        right=False,
+        labelbottom=False)  # labels along the bottom edge are off
+    ax.grid(False)
+    plt.savefig(work_out_path + '_contour_test1.png', bbox_inches='tight')
+
+
+
+    #################################################################################################################################3
+    # Contour plot for background subtracted image (optional gaussian if needed) with colorbar and isoline heignt
+    fig4, ax4 = plt.subplots(figsize=(12, 8))
+    #stack.im_framef[0, :, :] = ndimage.gaussian_filter(stack.im_framef[0, :, :],sigma=0.2)
+    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,500,1000,2500],alpha=0.3,cmap='seismic')
+    plt.colorbar()
+    plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
+
+    # Set axis
+    ax4.set_xticklabels([])
+    ax4.set_yticklabels([])
+    ax4.tick_params(
+        axis='both',  # changes apply to the x-axis
+        which='both',  # both major and minor ticks are affected
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off
+        left=False,
+        right=False,
+        labelbottom=False)  # labels along the bottom edge are off
+    ax4.grid(False)
+    plt.savefig(work_out_path + '_contour_test2.png', bbox_inches='tight')
+
+
+
+    #################################################################################################################################3
+    # Histogram of area with only background
+    fig2, ax2 = plt.subplots(figsize=(12, 8))
+    n, bins, patches = ax2.hist(stack.im_side, bins=[250,270,290,310,330,350,370], density=True, facecolor='darkgrey', alpha=0.75, histtype='bar', ec='w')
+    ax2.set_yticklabels([])
+    ax2.set_yticklabels([])
+    ax2.set_xlim(0, 2500)
+    ax2.tick_params(
+        axis='y',  # changes apply to the x-axis
+        which='both',  # both major and minor ticks are affected
+        left=False,
+        right=False)  # labels along the bottom edge are off
+    plt.xticks(fontsize=18)
+    plt.savefig(work_out_path + '_hist_test1.png', bbox_inches='tight')
+
+
+
+    #################################################################################################################################3
+    # Histogram of area with mostly signal
+    fig3, ax3 = plt.subplots(figsize=(12, 8))
+    n, bins, patches = ax3.hist(stack.im_side2, np.arange(1600,2500,20), density=True, facecolor='darkgrey', alpha=0.75, histtype='bar', ec='w')
+    ax3.set_yticklabels([])
+    ax3.set_xlim(0, 2500)
+    ax3.tick_params(
+        axis='y',  # changes apply to the x-axis
+        which='both',  # both major and minor ticks are affected
+        left=False,
+        right=False)  # labels along the bottom edge are off
+    plt.xticks(fontsize=18)
+    plt.savefig(work_out_path + '_hist_test2.png', bbox_inches='tight')
+
+
+    #################################################################################################################################
+    # 3d plot of variance, skew etc
+    fig5 = plt.figure(figsize=(12, 8))
+    ax5 = fig5.gca(projection='3d')
+    ax5.view_init(elev=30., azim=230.)
+
+    signal = stack.labelsf[:, 0]
+    signal[signal > 0] = 0
+
+    ax5.set_xlim(0, 1)
+    ax5.set_ylim(0, 1)
+    ax5.set_zlim(0, 1)
+    ax5.grid(False)
+    ax5.set_xlabel('Variance', labelpad=10)
+    ax5.set_ylabel('Skewness', labelpad=10)
+    ax5.set_zlabel('Median', labelpad=10)
+    varn = stack.propf[:, :, 0]
+    xyz = varn[stack.maskf[:, 0]]
+    xyz2 = varn[[not i for i in stack.maskf[:, 0]]]
+    ax5.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
+    ax5.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', size=80)
+
+    plt.savefig(work_out_path + '_3d_scatter.png', bbox_inches='tight')
