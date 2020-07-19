@@ -251,8 +251,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
-            # Converty intensities to
-            acceptori_brange = acceptori[brange]
+            # Converty intensities to numpy array
+            acceptori_brange = np.array([acceptori[a] for a in brange])
             donori_brange = np.array([donori[a] for a in brange])
 
             h5_time_start = timer()
