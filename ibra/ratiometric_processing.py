@@ -249,11 +249,12 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Calculate ratio image
         ratio = ratio_calc(acceptorc, donorc)
 
-        acceptori_brange = np.array([acceptori[a] for a in brange])
-        donori_brange = np.array([donori[a] for a in brange])
-
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
+            # Converty intensities to
+            acceptori_brange = acceptori[brange]
+            donori_brange = np.array([donori[a] for a in brange])
+
             h5_time_start = timer()
             h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',frange)
             h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',frange)
