@@ -170,7 +170,7 @@ def main():
         assert (fitter in fits), "fit should be either linear or exponential"
 
         # Run bleach correction algorithm
-        rp.bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5_save,tiff_save,frange)
+        rp.bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_save,tiff_save,frange)
 
 if __name__ == "__main__":
     main()

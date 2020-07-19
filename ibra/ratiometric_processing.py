@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 
 # Bleach correction module
-def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,res,fitter,h5_save,tiff_save,frange):
+def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_save,tiff_save,frange):
     # Start time
     time_start = timer()
 
