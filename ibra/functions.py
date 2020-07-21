@@ -335,7 +335,7 @@ def background_plots(stack,work_out_path):
     # Contour plot for original image (optional gaussian if needed) with colorbar and isoline heignt
     fig, ax = plt.subplots(figsize=(12, 8))
     #stack.im_medianf[:,:,0] = ndimage.gaussian_filter(stack.im_medianf[:,:,0],sigma=0.2)
-    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,500,1000,2500],alpha=0.3,cmap='seismic')
+    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,100,250,500,1000,1500,2000], nchunk=1, alpha=0.3,cmap='seismic')
     plt.colorbar(),stack.im_medianf[:,:,0].shape
     plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
 
@@ -359,7 +359,7 @@ def background_plots(stack,work_out_path):
     # Contour plot for background subtracted image (optional gaussian if needed) with colorbar and isoline heignt
     fig4, ax4 = plt.subplots(figsize=(12, 8))
     #stack.im_framef[0, :, :] = ndimage.gaussian_filter(stack.im_framef[0, :, :],sigma=0.2)
-    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,500,1000,2500],alpha=0.3,cmap='seismic')
+    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,100,250,500,1000,1500,2000],nchunk=1, alpha=0.3,cmap='seismic')
     plt.colorbar()
     plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
 
@@ -431,6 +431,6 @@ def background_plots(stack,work_out_path):
     xyz = varn[stack.maskf[:, 0]]
     xyz2 = varn[[not i for i in stack.maskf[:, 0]]]
     ax5.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
-    ax5.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', size=80)
+    ax5.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=80)
 
     plt.savefig(work_out_path + '_3d_scatter.png', bbox_inches='tight')
