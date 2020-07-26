@@ -252,7 +252,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     if (h5_save or tiff_save):
         # Calculate ratio image
         ratio = ratio_calc(acceptorc, donorc)
-
+g
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
             # Converty intensities to numpy array
