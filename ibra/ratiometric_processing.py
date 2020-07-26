@@ -59,7 +59,6 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         # Save acceptor bleaching factors
         if (h5_save):
             h5(acceptorb,'acceptorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print(("Saving Acceptor bleaching correction factors in " + work_out_path + '_back_ratio.h5'))
 
     # Fit and correct donor channel intensity
     if (donor_bound[1] > donor_bound[0]):
@@ -87,7 +86,6 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         # Save donor bleaching factors
         if (h5_save):
             h5(donorb,'donorb',work_out_path+'_back_ratio.h5',ratio_frange)
-            print("Saving Donor bleaching correction factors in " + work_out_path + '_back_ratio.h5')
 
     # End time
     time_end = timer()
@@ -102,7 +100,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Create plot to show median intensity over frame number after bleaching
-    time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Channel Intensity',h5_save=False)
+    time_evolution(acceptori,donori,work_out_path,'_intensity_bleach.png','Median Intensity/Bit Depth',h5_save=False)
 
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
@@ -183,18 +181,20 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Input files into dictionaries
         f2 = h5py.File(work_out_path + '_back_ratio.h5', 'r')
         ratio_frange = np.array(f2.attrs['ratio_frange'])
-        acceptornz = dict(list(zip(ratio_frange, np.array(f2['acceptornz']))))
-        donornz = dict(list(zip(ratio_frange, np.array(f2['donornz']))))
+
         acceptori = dict(list(zip(ratio_frange, np.array(f2['acceptori']))))
         donori = dict(list(zip(ratio_frange, np.array(f2['donori']))))
         f2.close()
     except:
-        # Initialize empty dictionaries
-        acceptornz, donornz, acceptori, donori = {},{},{},{}
+        # Initialize empty dictionaries for intensities
+        acceptori, donori = {},{}
+
+    # Initialize empty dictionaries for pixel counts
+    acceptornz, donornz = {},{}
 
     # Set up constants for loop
     mult = np.float16(255)/np.float16(res)
-    ires = 1/np.float16(res)
+    ires = 100/np.float16(res)
     ipix = 100/(Xdim*Ydim)
 
     # Loop through frames
@@ -249,8 +249,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
 
 
     # Create plot to showcase median intensity over frame number and the number of foreground pixels per channel (NON-bleach corrected)
-    time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Channel Intensity Ratio',h5_save)
-    time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground Pixel Ratio',h5_save)
+    time_evolution(acceptori,donori,work_out_path,'_intensity_nonbleach.png','Median Intensity/Bit Depth',h5_save)
+    time_evolution(acceptornz,donornz,work_out_path,'_pixelcount.png','Foreground/Total Image Pixels',h5_save)
 
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):

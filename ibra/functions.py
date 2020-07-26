@@ -155,19 +155,20 @@ def logit(path):
     return logger
 
 
-def h5(data,valo,path,frange):
+def h5(data,val,path,frange):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
-    if 'acceptor' in valo:
-        val = 'acceptor'
-    else:
-        val = 'donor'
-
     if val in f:
         # Open existing dataset
-        orig = f[valo]
-        orange = f.attrs[val + '_frange']
+        orig = f[val]
+
+        if val in ('acceptor','acceptori','acceptorb'):
+            orange = f.attrs['acceptor_frange']
+        elif val in ('donor', 'donori', 'donorb'):
+            orange = f.attrs['donor_frange']
+        else:
+            orange = f.attrs['ratio_frange']
 
         # Create dictionaries of new and existing data
         orig_dict = dict(zip(orange, orig))
@@ -184,21 +185,22 @@ def h5(data,valo,path,frange):
 
         # Delete existing HDF5 dataset
         if (val in f):
-            del f[valo]
+            del f[val]
 
     else:
         # If no stack is present, create it
         res = np.array(data)
         res_range = frange
 
-    # Save the image pixel data
-    if valo == val:
-        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    # Save the image pixel data and frange
+    if val in ('acceptor','donor'):
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+        f.attrs[val + '_frange'] = res_range
+    elif val == 'ratio':
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint8, compression='gzip')
+        f.attrs[val + '_frange'] = res_range
     else:
-        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
-
-    # Save the frame range
-    f.attrs[val + '_frange'] = res_range
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
 
     # Close dataset
     f.close()
@@ -212,17 +214,18 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Sort frames for plotting
     donor_plot = sorted(donor.items())
-    xsave, yd = list(zip(*donor_plot))
+    _, yd = list(zip(*donor_plot))
+
+    vals = ['acceptori','donori','acceptornz','donornz']
+    if (ylabel == 'Median Intensity/Bit Depth'):
+        names = vals[:2]
+        dec = 0
+    elif (ylabel == 'Foreground/Total Image Pixels'):
+        names = vals[2:]
+        dec = 2
 
     if (h5_save):
-        vals = ['acceptori','donori','acceptornz','donornz']
-        if (ylabel == 'Median Channel Intensity Ratio'):
-            names = vals[:2]
-        elif (ylabel == 'Foreground Pixel Ratio'):
-            names = vals[2:]
-
         # Convert to arrays
-        xsave = np.array(xsave)
         ya = np.array(ya)
         yd = np.array(yd)
 
@@ -245,12 +248,14 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
     ax.plot(xplot,ya,c='darkgrey',marker='*')
     ax.plot(xplot,yd,c='k',marker='*')
 
-    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
     plt.ylabel(ylabel,labelpad=15, fontsize=22)
-    ax.yaxis.set_major_formatter(PercentFormatter(decimals=2))
-    plt.xticks(fontsize=18)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=dec))
+    ax.yaxis.set_major_locator(MaxNLocator(6))
     plt.yticks(fontsize=18)
+    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.xticks(fontsize=18)
+
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(work_out_path + name, bbox_inches='tight')
 
