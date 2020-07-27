@@ -335,7 +335,9 @@ def background_plots(stack,work_out_path):
     # Contour plot for original image (optional gaussian if needed) with colorbar and isoline heignt
     fig, ax = plt.subplots(figsize=(12, 8))
     #stack.im_medianf[:,:,0] = ndimage.gaussian_filter(stack.im_medianf[:,:,0],sigma=0.2)
-    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,100,250,500,1000,1500,2000], nchunk=1, alpha=0.3,cmap='seismic')
+    #contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,100,250,500,1000,1500,2000], nchunk=1, alpha=0.3,cmap='Accent')
+    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,250,450,800,1200,1600,1800], nchunk=1, alpha=0.3,cmap='seismic')
+
     plt.colorbar(),stack.im_medianf[:,:,0].shape
     plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
 
@@ -359,7 +361,9 @@ def background_plots(stack,work_out_path):
     # Contour plot for background subtracted image (optional gaussian if needed) with colorbar and isoline heignt
     fig4, ax4 = plt.subplots(figsize=(12, 8))
     #stack.im_framef[0, :, :] = ndimage.gaussian_filter(stack.im_framef[0, :, :],sigma=0.2)
-    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,100,250,500,1000,1500,2000],nchunk=1, alpha=0.3,cmap='seismic')
+    #contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,100,250,500,1000,1500,2000],nchunk=1, alpha=0.3,cmap='Accent')
+    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,250,450,800,1200,1600,1800],nchunk=1, alpha=0.3,cmap='seismic')
+
     plt.colorbar()
     plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
 
@@ -377,7 +381,11 @@ def background_plots(stack,work_out_path):
     ax4.grid(False)
     plt.savefig(work_out_path + '_contour_test2.png', bbox_inches='tight')
 
-
+    fig6, ax6 = plt.subplots(figsize=(12, 8))
+    cbar = plt.colorbar(contours,ax=ax6)
+    ax6.remove()
+    cbar.set_ticklabels([])
+    plt.savefig(work_out_path + '_colorbar_test2.png', bbox_inches='tight', dpi=300)
 
     #################################################################################################################################3
     # Histogram of area with only background
