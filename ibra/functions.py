@@ -4,6 +4,7 @@ Miscellaneous functions for plotting, logging, data output, fitting etc
 """
 
 import numpy as np
+import matplotlib
 from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -16,11 +17,11 @@ import h5py
 from skimage.external.tifffile import TiffWriter
 import os
 from scipy.optimize import curve_fit
-from scipy import ndimage
 from sklearn import linear_model
-from mpl_toolkits.mplot3d import Axes3D
+from scipy import ndimage
 
 rcParams['font.family'] = 'serif'
+rcParams['svg.fonttype'] = 'none'
 
 # Create animation of background subtraction
 def background_animation(verbose,stack,work_out_path,frange):
@@ -66,8 +67,8 @@ def background_animation(verbose,stack,work_out_path,frange):
         varn = stack.propf[:,:,i]
         xyz = varn[stack.maskf[:,i]]
         xyz2 = varn[[not i for i in stack.maskf[:,i]]]
-        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
-        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=80)
+        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='blue')
+        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='red', s=80)
 
         line = [line1, line2, line3, line4]
         return line,
@@ -138,7 +139,7 @@ def background_animation(verbose,stack,work_out_path,frange):
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
     if (verbose):
         print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " second(s)"))
 
@@ -155,23 +156,24 @@ def logit(path):
     return logger
 
 
-def h5(data,valo,path,frange):
+def h5(data,val,path,frange):
     """Saving the image stack as a .h5 file"""
     f = h5py.File(path, 'a')
 
-    if 'acceptor' in valo:
-        val = 'acceptor'
-    else:
-        val = 'donor'
-
     if val in f:
         # Open existing dataset
-        orig = f[valo]
-        orange = f.attrs[val+'_frange']
+        orig = f[val]
+
+        if val in ('acceptor','acceptori','acceptorb'):
+            orange = f.attrs['acceptor_frange']
+        elif val in ('donor', 'donori', 'donorb'):
+            orange = f.attrs['donor_frange']
+        else:
+            orange = f.attrs['ratio_frange']
 
         # Create dictionaries of new and existing data
-        orig_dict = dict(zip(orange,orig))
-        new_dict = dict(zip(frange,data))
+        orig_dict = dict(zip(orange, orig))
+        new_dict = dict(zip(frange, data))
 
         # Save and re-write data in the dictionary
         for key in frange:
@@ -184,21 +186,22 @@ def h5(data,valo,path,frange):
 
         # Delete existing HDF5 dataset
         if (val in f):
-            del f[valo]
+            del f[val]
 
     else:
         # If no stack is present, create it
         res = np.array(data)
         res_range = frange
 
-    # Save the image pixel data
-    if valo == val:
-        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+    # Save the image pixel data and frange
+    if val in ('acceptor','donor'):
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+        f.attrs[val + '_frange'] = res_range
+    elif val == 'ratio':
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint8, compression='gzip')
+        f.attrs[val + '_frange'] = res_range
     else:
-        f.create_dataset(valo, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
-
-    # Save the frame range
-    f.attrs[val + '_frange'] = res_range
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
 
     # Close dataset
     f.close()
@@ -212,17 +215,18 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Sort frames for plotting
     donor_plot = sorted(donor.items())
-    xsave, yd = list(zip(*donor_plot))
+    _, yd = list(zip(*donor_plot))
+
+    vals = ['acceptori','donori','acceptornz','donornz']
+    if (ylabel == 'Median Intensity/Bit Depth'):
+        names = vals[:2]
+        dec = 0
+    elif (ylabel == 'Foreground/Total Image Pixels'):
+        names = vals[2:]
+        dec = 2
 
     if (h5_save):
-        vals = ['acceptori','donori','acceptornz','donornz']
-        if (ylabel == 'Median Channel Intensity'):
-            names = vals[:2]
-        elif (ylabel == 'Foreground Pixel Count'):
-            names = vals[2:]
-
         # Convert to arrays
-        xsave = np.array(xsave)
         ya = np.array(ya)
         yd = np.array(yd)
 
@@ -242,15 +246,17 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Set up plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xplot,ya,c='darkgrey',marker='*')
-    ax.plot(xplot,yd,c='k',marker='*')
+    ax.plot(xplot,ya,c='darkgrey')
+    ax.plot(xplot,yd,c='k')
 
-    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
     plt.ylabel(ylabel,labelpad=15, fontsize=22)
-    ax.yaxis.set_major_formatter(PercentFormatter(decimals=2))
-    plt.xticks(fontsize=18)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=dec))
+    ax.yaxis.set_major_locator(MaxNLocator(6))
     plt.yticks(fontsize=18)
+    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.xticks(fontsize=18)
+
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(work_out_path + name, bbox_inches='tight')
 
@@ -431,7 +437,7 @@ def background_plots(stack,work_out_path):
     ax5.set_xlim(0, 1)
     ax5.set_ylim(0, 1)
     ax5.set_zlim(0, 1)
-    ax5.grid(False)
+    ax5.grid(True)
     ax5.set_xlabel('Variance', labelpad=10)
     ax5.set_ylabel('Skewness', labelpad=10)
     ax5.set_zlabel('Median', labelpad=10)
@@ -441,4 +447,33 @@ def background_plots(stack,work_out_path):
     ax5.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
     ax5.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=80)
 
-    plt.savefig(work_out_path + '_3d_scatter.png', bbox_inches='tight')
+    plt.savefig(work_out_path + '_3d_scatter.svg', bbox_inches='tight')
+
+def background_intensities(acceptoro, acceptori, donor, work_out_path):
+    """Median channel intensity per frame"""
+    acceptoro_plot = sorted(acceptoro.items())
+    _, yo = list(zip(*acceptoro_plot))
+
+    acceptori_plot = sorted(acceptori.items())
+    xa, ya = list(zip(*acceptori_plot))
+    xplot = [x + 1 for x in xa]
+
+    # Sort frames for plotting
+    donor_plot = sorted(donor.items())
+    _, yd = list(zip(*donor_plot))
+
+    # Set up plot
+    fig, ax = plt.subplots(figsize=(12, 8))
+    ax.plot(xplot,ya,c='darkgrey',linestyle='--')
+    ax.plot(xplot,yo,c='darkgrey')
+    ax.plot(xplot,yd,c='k')
+
+    plt.ylabel('Median Intensity/Bit Depth',labelpad=15, fontsize=22)
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=0))
+    ax.yaxis.set_major_locator(MaxNLocator(6))
+    plt.yticks(fontsize=18)
+    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.xticks(fontsize=18)
+
+    plt.savefig(work_out_path + '_intensity_plot_comparison.png', bbox_inches='tight')
