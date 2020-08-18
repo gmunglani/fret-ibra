@@ -33,7 +33,6 @@ class stack():
         self.im_stack = pims.open(im_path)
         stack.siz1, stack.siz2 = self.im_stack.frame_shape
 
-
     # Set class frame parameters
     @classmethod
     def set_frame_parameters(cls,win):
@@ -46,6 +45,10 @@ class stack():
         cls.X, cls.Y = np.int16(np.meshgrid(np.arange(cls.height), np.arange(cls.width)))
         cls.XY = np.column_stack((np.ravel(cls.X),np.ravel(cls.Y)))
 
+        # Setup grid for intensity weighted centroid calculation
+        grid = np.indices((cls.dim, cls.dim))
+        offset = (cls.dim - 1)*0.5
+        stack.dist_grid = np.sqrt(np.square(np.subtract(grid[0], offset)) + np.square(np.subtract(grid[1], offset)))
 
     # Set class constants
     @classmethod
@@ -119,32 +122,18 @@ class frame(stack):
         tile_prop = np.empty([super().width*super().height,5],dtype=np.float32)
         self.im_tile = block(self.im_frame,super().dim)
 
-        # Create thresholded temporary frame for extracting centroids
-        mult = np.float16(255) / np.float16(super().res)
-        im_frame_con = np.uint8(np.float16(self.im_frame) * mult)
-        _,im_frame_con_thresh = cv2.threshold(im_frame_con, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-        im_tile_res = block(im_frame_con_thresh,super().dim)
-
         # Calculate 3 moments of the pixel intensity distributions, the median intensity, and the contour centriod distance
         for i in range(tile_prop.shape[0]):
             im_tile_flat = np.ravel(self.im_tile[i,:,:])
+            # Moments of the intensity distribution
             tile_prop[i,0] = sp.stats.moment(im_tile_flat,moment=2,axis=0)
             tile_prop[i,1] = sp.stats.moment(im_tile_flat,moment=3,axis=0)
             tile_prop[i,2] = sp.stats.moment(im_tile_flat,moment=4,axis=0)
             tile_prop[i,3] = np.median(im_tile_flat)
 
-            # Find contours and the default centroid value
-            contours, _ = cv2.findContours(im_tile_res[i,:,:], 1, 2)
-            center = im_tile_res.shape[2]/2
-
-            # Find the contour centroid and distance from the default
-            try:
-                M = cv2.moments(contours[0])
-                tile_prop[i,4] = math.sqrt(((int(M['m10'] / M['m00']) - center) ** 2) + ((int(M['m01'] / M['m00']) - center) ** 2))
-            except:
-                tile_prop[i,4] = 0
-
+            # intensity weighted centroid (spatial) calculation
+            centroid_intensity = np.multiply(self.im_tile[i, :, :], super().dist_grid)
+            tile_prop[i,4] = np.sum(np.uint32(centroid_intensity))
 
         self.im_median = np.copy(tile_prop[:,3])
 
