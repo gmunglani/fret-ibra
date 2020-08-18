@@ -61,7 +61,7 @@ class stack():
     def metric_prealloc(self):
         length = len(stack.frange)
         rows = self.height*self.width
-        self.im_medianf = np.empty((self.width,self.height,length),dtype=np.float32)
+        self.im_medianf = np.empty((self.siz1, self.siz2, length), dtype=np.uint16)
         self.propf = np.empty((rows,5,length),dtype=np.float32)
         self.maskf = np.empty((rows,length),dtype=np.bool)
         self.labelsf = np.empty((rows,length),dtype=np.int8)
@@ -72,7 +72,7 @@ class stack():
     # Update metrics on a per frame basis
     def metric_update(self,result):
         pos = result[0]
-        self.im_medianf[:,:,pos] = np.reshape(result[1],(self.width,self.height))
+        self.im_medianf[:,:,pos] = result[1]
         self.im_backf[:,:,pos] = result[2]
         self.im_framef[pos,:,:] = result[3]
         self.propf[:,:,pos] = result[4]
@@ -109,6 +109,7 @@ class stack():
 class frame(stack):
     def __init__(self,im_frame,count,pos):
         self.im_frame = im_frame
+        self.im_frame_orig = im_frame
         self.count = count
         self.pos = pos
 
@@ -210,7 +211,7 @@ class frame(stack):
         self.subtraction()
         self.filter()
 
-        return (self.pos, self.im_median, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
+        return (self.pos, self.im_frame_orig, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
 
 
 def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange):

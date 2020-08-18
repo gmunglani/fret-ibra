@@ -27,7 +27,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     """Background subtraction result per frame video"""
     def data(i, stack, line):
         ax1.clear()
-        line1 = ax1.plot_surface(stack.X, stack.Y, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
+        line1 = ax1.plot_surface(X1, Y1, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
         ax1.set_title("{} Frame: {}".format(stack.val.capitalize(), frange[i] + 1))
         ax1.set_zlim(0, np.amax(stack.im_medianf))
         ax1.set_xticklabels([])
@@ -59,15 +59,21 @@ def background_animation(verbose,stack,work_out_path,frange):
         ax4.set_xlim(0, 1)
         ax4.set_ylim(0, 1)
         ax4.set_zlim(0, 1)
+        ax4.set_xticks([0,0.5,1])
+        ax4.set_yticks([0,0.5,1])
+        ax4.set_zticks([0,0.5,1])
         ax4.grid(False)
-        ax4.set_xlabel('Variance', labelpad=10)
-        ax4.set_ylabel('Skewness', labelpad=10)
-        ax4.set_zlabel('Median', labelpad=10)
+        ax4.set_xlabel('Variance', labelpad=-1)
+        ax4.set_ylabel('Skewness', labelpad=-1)
+        ax4.set_zlabel('Median', labelpad=-1)
+        ax4.tick_params(axis="x", direction="out", pad=-2)
+        ax4.tick_params(axis="y", direction="out", pad=-2)
+        ax4.tick_params(axis="z", direction="out", pad=-2)
         varn = stack.propf[:,:,i]
         xyz = varn[stack.maskf[:,i]]
         xyz2 = varn[[not i for i in stack.maskf[:,i]]]
-        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='blue')
-        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='red', s=80)
+        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
+        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=40)
 
         line = [line1, line2, line3, line4]
         return line,
@@ -112,7 +118,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     # Define grid for tiled image
     X1, Y1 = np.int16(np.meshgrid(np.arange(stack.siz2), np.arange(stack.siz1)))
 
-    line1 = ax1.plot_surface(stack.X,stack.Y,stack.im_medianf[:,:,0],cmap=cm.bwr)
+    line1 = ax1.plot_surface(X1,Y1,stack.im_medianf[:,:,0],cmap=cm.bwr)
     line2 = ax2.plot_surface(stack.X,stack.Y,stack.im_backf[:,:,0],cmap=cm.bwr)
     line3 = ax3.plot_surface(X1,Y1,stack.im_framef[0,:,:],cmap=cm.bwr)
     line4 = ax4.scatter(0.5, 0.5, 0.5, c='red')
