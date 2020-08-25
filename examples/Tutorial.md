@@ -32,7 +32,7 @@ The *background subtraction* modules (0 or 1) is run first.
 option = 0
 ```
 
-The background modules' parameters include *nwindow*, which is the number of tiles along the long axis of the image that the frame will be divided into, as well as the acceptor and donor channel *eps* values (the two channels are processed separately depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* should be a factor of the image width (default: 40 for 1280X960).
+The background modules' parameters include *nwindow*, which is the number of tiles along the long axis of the image that the frame will be divided into and the acceptor or donor channel *eps* values (depending if *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* should be a factor of the image width (default: 40 for 1280X960).
 Note, that the higher the *eps* value, the larger the number of pixels that are considered foreground. Very high *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm (default: 0.01). 
 ```txt
 nwindow = 40
