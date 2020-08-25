@@ -64,7 +64,7 @@ class stack():
     def metric_prealloc(self):
         length = len(stack.frange)
         rows = self.height*self.width
-        self.im_medianf = np.empty((self.siz1, self.siz2, length), dtype=np.uint16)
+        self.im_origf = np.empty((self.siz1, self.siz2, length), dtype=np.uint16)
         self.propf = np.empty((rows,5,length),dtype=np.float32)
         self.maskf = np.empty((rows,length),dtype=np.bool)
         self.labelsf = np.empty((rows,length),dtype=np.int8)
@@ -75,7 +75,7 @@ class stack():
     # Update metrics on a per frame basis
     def metric_update(self,result):
         pos = result[0]
-        self.im_medianf[:,:,pos] = result[1]
+        self.im_origf[:,:,pos] = result[1]
         self.im_backf[:,:,pos] = result[2]
         self.im_framef[pos,:,:] = result[3]
         self.propf[:,:,pos] = result[4]
@@ -131,7 +131,7 @@ class frame(stack):
             tile_prop[i,2] = sp.stats.moment(im_tile_flat,moment=4,axis=0)
             tile_prop[i,3] = np.median(im_tile_flat)
 
-            # intensity weighted centroid (spatial) calculation
+            # Intensity weighted centroid (spatial) calculation
             centroid_intensity = np.multiply(self.im_tile[i, :, :], super().dist_grid)
             tile_prop[i,4] = np.sum(np.uint32(centroid_intensity))
 
@@ -175,9 +175,9 @@ class frame(stack):
                 mod = i % super().height
                 self.im_frame[rem * super().dim:(rem + 1) * super().dim, mod * super().dim:(mod + 1) * super().dim] = np.subtract(self.im_tile[i,:,:], j)
 
-            # Remove negative values
-            low_values_flags = self.im_frame > 65000
-            self.im_frame[low_values_flags] = 0
+                # Remove negative values
+                self.im_frame[self.im_frame > np.amax(self.im_frame_orig)] = 0
+                self.im_frame[self.im_frame < 0] = 0
 
         except:
             # Change the eps value if DBSCAN does not work
@@ -187,8 +187,7 @@ class frame(stack):
 
     # Use a bilateral smoothing filter to preserve edges
     def filter(self):
-        self.im_frame = np.float32(self.im_frame)
-        filtered = cv2.bilateralFilter(self.im_frame, np.int16(math.ceil(9 * super().siz2 / 320)), super().width*0.5, super().width*0.5)
+        filtered = cv2.bilateralFilter(np.float32(self.im_frame), np.int16(math.ceil(9 * super().siz2 / 320)), super().width*0.5, super().width*0.5)
         self.im_frame = np.uint16(filtered)
 
     # Run frame background subtraction workflow
@@ -245,8 +244,6 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     # Save animation of frame metrics
     if (anim_save):
         background_animation(verbose,all,work_out_path,frange)
-
-       # if (verbose):
 
     # Save background subtracted stack as HDF5
     if (h5_save):

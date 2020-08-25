@@ -129,7 +129,7 @@ def main():
     # Background module options
     if (module <= 1):
         # Input window tile size and eps values for DBSCAN clustering algorithm
-        win = int(config['Background Parameters'].get('window'))
+        win = int(config['Background Parameters'].get('nwindow'))
         eps = float(config['Background Parameters'].get('eps'))
 
         assert (win > 0), "window should be a positive integer"

@@ -219,20 +219,28 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         # Consider only foreground pixel intensity overlapping between donor and acceptor channels to ensure channels overlap perfectly
         if (union):
             # Create mask for overlapping pixels
-            C = np.multiply(A_thresh,B_thresh)
+            C = np.multiply(A_thresh, B_thresh)
             C[C > 0] = 1
 
             # Set non-overlapping pixels to zero
             acceptorc[frame,:,:] *= C
             donorc[frame,:,:] *= C
 
-        # Count number of non-zero pixels per frame
+        # Count number of non-zero pixels by total pixels per frame
         acceptornz[count] = np.count_nonzero(A_thresh)*ipix
         donornz[count] = np.count_nonzero(B_thresh)*ipix
 
-        # Find the median non-zero intensity pixels per frame
-        acceptori[count] = ndimage.median(acceptorc[frame,:,:],labels=C)*ires
-        donori[count] = ndimage.median(donorc[frame,:,:],labels=C)*ires
+        # Find the ratio of the median non-zero intensity pixels and the bit depth per frame for the acceptor stack
+        if (np.amax(acceptorc[frame,:,:]) > 0.0):
+            acceptori[count] = ndimage.median(acceptorc[frame,:,:], labels = A_thresh/255)*ires
+        else:
+            acceptori[count] = 0
+
+        # Find the ratio of the median non-zero intensity pixels and the bit depth per frame for the donor stack
+        if (np.amax(donorc[frame,:,:])> 0.0):
+            donori[count] = ndimage.median(donorc[frame,:,:], labels = B_thresh/255)*ires
+        else:
+            donori[count] = 0
 
     # End time
     time_end = timer()
