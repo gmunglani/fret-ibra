@@ -9,7 +9,7 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.animation as animation
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FormatStrFormatter, PercentFormatter
 import mpl_toolkits.mplot3d.axes3d as p3
 import logging
 from timeit import default_timer as timer
@@ -18,6 +18,7 @@ from skimage.external.tifffile import TiffWriter
 import os
 from scipy.optimize import curve_fit
 from sklearn import linear_model
+from scipy import ndimage
 
 rcParams['font.family'] = 'serif'
 
@@ -26,9 +27,9 @@ def background_animation(verbose,stack,work_out_path,frange):
     """Background subtraction result per frame video"""
     def data(i, stack, line):
         ax1.clear()
-        line1 = ax1.plot_surface(stack.X, stack.Y, stack.im_medianf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
+        line1 = ax1.plot_surface(X1, Y1, stack.im_origf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
         ax1.set_title("{} Frame: {}".format(stack.val.capitalize(), frange[i] + 1))
-        ax1.set_zlim(0, np.amax(stack.im_medianf))
+        ax1.set_zlim(0, np.amax(stack.im_origf))
         ax1.set_xticklabels([])
         ax1.set_yticklabels([])
         ax1.grid(False)
@@ -37,7 +38,7 @@ def background_animation(verbose,stack,work_out_path,frange):
         minmax = np.ptp(np.ravel(stack.im_backf[:,:,i]))
         line2 = ax2.plot_surface(stack.X, stack.Y, stack.im_backf[:, :, i], cmap=cm.bwr, linewidth=0, antialiased=False)
         ax2.set_title("Min to Max (Background): {}".format(minmax))
-        ax2.set_zlim(0, np.amax(stack.im_medianf))
+        ax2.set_zlim(0, np.amax(stack.im_origf))
         ax2.set_xticklabels([])
         ax2.set_yticklabels([])
         ax2.grid(False)
@@ -45,7 +46,7 @@ def background_animation(verbose,stack,work_out_path,frange):
         ax3.clear()
         line3 = ax3.plot_surface(X1, Y1, stack.im_framef[i, :, :], cmap=cm.bwr, linewidth=0, antialiased=False)
         ax3.set_title("Background Subtracted Image")
-        ax3.set_zlim(0, np.amax(stack.im_medianf))
+        ax3.set_zlim(0, np.amax(stack.im_origf))
         ax3.set_xticklabels([])
         ax3.set_yticklabels([])
         ax3.grid(False)
@@ -58,15 +59,21 @@ def background_animation(verbose,stack,work_out_path,frange):
         ax4.set_xlim(0, 1)
         ax4.set_ylim(0, 1)
         ax4.set_zlim(0, 1)
+        ax4.set_xticks([0,0.5,1])
+        ax4.set_yticks([0,0.5,1])
+        ax4.set_zticks([0,0.5,1])
         ax4.grid(False)
-        ax4.set_xlabel('Variance', labelpad=10)
-        ax4.set_ylabel('Skewness', labelpad=10)
-        ax4.set_zlabel('Median', labelpad=10)
+        ax4.set_xlabel('Variance', labelpad=-1)
+        ax4.set_ylabel('Skewness', labelpad=-1)
+        ax4.set_zlabel('Median', labelpad=-1)
+        ax4.tick_params(axis="x", direction="out", pad=-2)
+        ax4.tick_params(axis="y", direction="out", pad=-2)
+        ax4.tick_params(axis="z", direction="out", pad=-2)
         varn = stack.propf[:,:,i]
         xyz = varn[stack.maskf[:,i]]
         xyz2 = varn[[not i for i in stack.maskf[:,i]]]
-        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='blue')
-        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='red', s=80)
+        line4 = ax4.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
+        line4 = ax4.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=40)
 
         line = [line1, line2, line3, line4]
         return line,
@@ -111,7 +118,7 @@ def background_animation(verbose,stack,work_out_path,frange):
     # Define grid for tiled image
     X1, Y1 = np.int16(np.meshgrid(np.arange(stack.siz2), np.arange(stack.siz1)))
 
-    line1 = ax1.plot_surface(stack.X,stack.Y,stack.im_medianf[:,:,0],cmap=cm.bwr)
+    line1 = ax1.plot_surface(X1,Y1,stack.im_origf[:,:,0],cmap=cm.bwr)
     line2 = ax2.plot_surface(stack.X,stack.Y,stack.im_backf[:,:,0],cmap=cm.bwr)
     line3 = ax3.plot_surface(X1,Y1,stack.im_framef[0,:,:],cmap=cm.bwr)
     line4 = ax4.scatter(0.5, 0.5, 0.5, c='red')
@@ -137,9 +144,9 @@ def background_animation(verbose,stack,work_out_path,frange):
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
     if (verbose):
-        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " seconds"))
+        print((stack.val.capitalize() +" (Background Animation) Time: " + time_elapsed + " second(s)"))
 
 
 def logit(path):
@@ -161,11 +168,17 @@ def h5(data,val,path,frange):
     if val in f:
         # Open existing dataset
         orig = f[val]
-        orange = f.attrs[val+'_frange']
+
+        if val in ('acceptor','acceptori','acceptorb'):
+            orange = f.attrs['acceptor_frange']
+        elif val in ('donor', 'donori', 'donorb'):
+            orange = f.attrs['donor_frange']
+        else:
+            orange = f.attrs['ratio_frange']
 
         # Create dictionaries of new and existing data
-        orig_dict = dict(zip(orange,orig))
-        new_dict = dict(zip(frange,data))
+        orig_dict = dict(zip(orange, orig))
+        new_dict = dict(zip(frange, data))
 
         # Save and re-write data in the dictionary
         for key in frange:
@@ -185,15 +198,18 @@ def h5(data,val,path,frange):
         res = np.array(data)
         res_range = frange
 
-    # Save the image pixel data
-    f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
-
-    # Save the frame range
-    f.attrs[val + '_frange'] = res_range
+    # Save the image pixel data and frange
+    if val in ('acceptor','donor'):
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint16, compression='gzip')
+        f.attrs[val + '_frange'] = res_range
+    elif val == 'ratio':
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.uint8, compression='gzip')
+        f.attrs[val + '_frange'] = res_range
+    else:
+        f.create_dataset(val, data=res, shape=res.shape, dtype=np.float16, compression='gzip')
 
     # Close dataset
     f.close()
-
 
 def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
     """Median channel intensity per frame"""
@@ -203,17 +219,18 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Sort frames for plotting
     donor_plot = sorted(donor.items())
-    xsave, yd = list(zip(*donor_plot))
+    _, yd = list(zip(*donor_plot))
+
+    vals = ['acceptori','donori','acceptornz','donornz']
+    if (ylabel == 'Median Intensity/Bit Depth'):
+        names = vals[:2]
+        dec = 1
+    elif (ylabel == 'Foreground/Total Image Pixels'):
+        names = vals[2:]
+        dec = 2
 
     if (h5_save):
-        vals = ['acceptori','donori','acceptornz','donornz']
-        if (ylabel == 'Median Channel Intensity'):
-            names = vals[:2]
-        elif (ylabel == 'Foreground Pixel Count'):
-            names = vals[2:]
-
         # Convert to arrays
-        xsave = np.array(xsave)
         ya = np.array(ya)
         yd = np.array(yd)
 
@@ -233,14 +250,17 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
     # Set up plot
     fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xplot,ya,c='r',marker='*')
-    ax.plot(xplot,yd,c='b',marker='*')
+    ax.plot(xplot,ya,c=(0.62745098, 0.152941176, 0.498039216),marker='*')
+    ax.plot(xplot,yd,c=(1,0.517647059,0),marker='*')
 
-    plt.xlabel('Frame Number',labelpad=15, fontsize=28)
-    plt.ylabel(ylabel,labelpad=15, fontsize=28)
-    plt.xticks(fontsize=18)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.ylabel(ylabel,labelpad=15, fontsize=22)
+    ax.yaxis.set_major_formatter(PercentFormatter(decimals=dec))
+    ax.yaxis.set_major_locator(MaxNLocator(6))
     plt.yticks(fontsize=18)
+    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    plt.xticks(fontsize=18)
+
     plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
     plt.savefig(work_out_path + name, bbox_inches='tight')
 
@@ -291,3 +311,27 @@ def bleach_fit(brange,frange,intensity,fitter):
     corr = np.divide(pred[0], pred)
 
     return corr
+
+
+def ratio_calc(acceptorc,donorc):
+    # Divide acceptor by donor stack
+    ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc, dtype=np.float16), where=donorc != 0)
+    ratio = np.nan_to_num(ratio)
+
+    # Flatten array to find intensity percentiles
+    ratio_flat = np.ravel(ratio)
+    perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [10, 90], interpolation='nearest')
+
+    # Find 10th/90th percentile ratio and additive constant for scaling
+    perc_ratio = perc[0] / perc[1]
+    const = 0.123 * (1 - perc_ratio)
+
+    # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
+    ratio = 230.0 * (ratio / perc[1] - perc_ratio + const) / (1.0 - perc_ratio + const)
+
+    # Set max/min values and apply median filter
+    ratio[ratio <= 0.0] = 0.0
+    ratio[ratio >= 255.0] = 255.0
+    ratio = ndimage.median_filter(np.uint8(ratio), size=5)
+
+    return ratio

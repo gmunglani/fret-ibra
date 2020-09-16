@@ -33,7 +33,6 @@ class stack():
         self.im_stack = pims.open(im_path)
         stack.siz1, stack.siz2 = self.im_stack.frame_shape
 
-
     # Set class frame parameters
     @classmethod
     def set_frame_parameters(cls,win):
@@ -46,6 +45,10 @@ class stack():
         cls.X, cls.Y = np.int16(np.meshgrid(np.arange(cls.height), np.arange(cls.width)))
         cls.XY = np.column_stack((np.ravel(cls.X),np.ravel(cls.Y)))
 
+        # Setup grid for intensity weighted centroid calculation
+        grid = np.indices((cls.dim, cls.dim))
+        offset = (cls.dim - 1)*0.5
+        stack.dist_grid = np.sqrt(np.square(np.subtract(grid[0], offset)) + np.square(np.subtract(grid[1], offset)))
 
     # Set class constants
     @classmethod
@@ -61,7 +64,7 @@ class stack():
     def metric_prealloc(self):
         length = len(stack.frange)
         rows = self.height*self.width
-        self.im_medianf = np.empty((self.width,self.height,length),dtype=np.float32)
+        self.im_origf = np.empty((self.siz1, self.siz2, length), dtype=np.uint16)
         self.propf = np.empty((rows,5,length),dtype=np.float32)
         self.maskf = np.empty((rows,length),dtype=np.bool)
         self.labelsf = np.empty((rows,length),dtype=np.int8)
@@ -72,7 +75,7 @@ class stack():
     # Update metrics on a per frame basis
     def metric_update(self,result):
         pos = result[0]
-        self.im_medianf[:,:,pos] = np.reshape(result[1],(self.width,self.height))
+        self.im_origf[:,:,pos] = result[1]
         self.im_backf[:,:,pos] = result[2]
         self.im_framef[pos,:,:] = result[3]
         self.propf[:,:,pos] = result[4]
@@ -109,6 +112,7 @@ class stack():
 class frame(stack):
     def __init__(self,im_frame,count,pos):
         self.im_frame = im_frame
+        self.im_frame_orig = im_frame
         self.count = count
         self.pos = pos
 
@@ -118,32 +122,18 @@ class frame(stack):
         tile_prop = np.empty([super().width*super().height,5],dtype=np.float32)
         self.im_tile = block(self.im_frame,super().dim)
 
-        # Create thresholded temporary frame for extracting centroids
-        mult = np.float16(255) / np.float16(super().res)
-        im_frame_con = np.uint8(np.float16(self.im_frame) * mult)
-        _,im_frame_con_thresh = cv2.threshold(im_frame_con, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-
-        im_tile_res = block(im_frame_con_thresh,super().dim)
-
         # Calculate 3 moments of the pixel intensity distributions, the median intensity, and the contour centriod distance
         for i in range(tile_prop.shape[0]):
             im_tile_flat = np.ravel(self.im_tile[i,:,:])
+            # Moments of the intensity distribution
             tile_prop[i,0] = sp.stats.moment(im_tile_flat,moment=2,axis=0)
             tile_prop[i,1] = sp.stats.moment(im_tile_flat,moment=3,axis=0)
             tile_prop[i,2] = sp.stats.moment(im_tile_flat,moment=4,axis=0)
             tile_prop[i,3] = np.median(im_tile_flat)
 
-            # Find contours and the default centroid value
-            contours, _ = cv2.findContours(im_tile_res[i,:,:], 1, 2)
-            center = im_tile_res.shape[2]/2
-
-            # Find the contour centroid and distance from the default
-            try:
-                M = cv2.moments(contours[0])
-                tile_prop[i,4] = math.sqrt(((int(M['m10'] / M['m00']) - center) ** 2) + ((int(M['m01'] / M['m00']) - center) ** 2))
-            except:
-                tile_prop[i,4] = 0
-
+            # Intensity weighted centroid (spatial) calculation
+            centroid_intensity = np.multiply(self.im_tile[i, :, :], super().dist_grid)
+            tile_prop[i,4] = np.sum(np.uint32(centroid_intensity))
 
         self.im_median = np.copy(tile_prop[:,3])
 
@@ -185,9 +175,9 @@ class frame(stack):
                 mod = i % super().height
                 self.im_frame[rem * super().dim:(rem + 1) * super().dim, mod * super().dim:(mod + 1) * super().dim] = np.subtract(self.im_tile[i,:,:], j)
 
-            # Remove negative values
-            low_values_flags = self.im_frame > 65000
-            self.im_frame[low_values_flags] = 0
+                # Remove negative values
+                self.im_frame[self.im_frame > np.amax(self.im_frame_orig)] = 0
+                self.im_frame[self.im_frame < 0] = 0
 
         except:
             # Change the eps value if DBSCAN does not work
@@ -197,8 +187,7 @@ class frame(stack):
 
     # Use a bilateral smoothing filter to preserve edges
     def filter(self):
-        self.im_frame = np.float32(self.im_frame)
-        filtered = cv2.bilateralFilter(self.im_frame, np.int16(math.ceil(9 * super().siz2 / 320)), super().width*0.5, super().width*0.5)
+        filtered = cv2.bilateralFilter(np.float32(self.im_frame), np.int16(math.ceil(9 * super().siz2 / 320)), super().width*0.5, super().width*0.5)
         self.im_frame = np.uint16(filtered)
 
     # Run frame background subtraction workflow
@@ -210,7 +199,7 @@ class frame(stack):
         self.subtraction()
         self.filter()
 
-        return (self.pos, self.im_median, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
+        return (self.pos, self.im_frame_orig, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
 
 
 def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
@@ -245,9 +234,9 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
 
     # End time
     time_end = timer()
-    time_elapsed = str(int(time_end - time_start))
+    time_elapsed = str(int(time_end - time_start)+1)
     if (verbose):
-        print((val.capitalize() +" (Background Subtraction) Time: " + time_elapsed + " seconds"))
+        print((val.capitalize() +" (Background Subtraction) Time: " + time_elapsed + " second(s)"))
 
     # Update log file with background subtraction data
     all.logger_update(h5_save,time_elapsed)
@@ -256,8 +245,6 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     if (anim_save):
         background_animation(verbose,all,work_out_path,frange)
 
-       # if (verbose):
-
     # Save background subtracted stack as HDF5
     if (h5_save):
         h5_time_start = timer()
@@ -265,7 +252,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
         h5_time_end = timer()
 
         if (verbose):
-            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)) + " second(s)]"))
+            print(("Saving " + val.capitalize() + " HDF5 stack in " + work_out_path + '.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start)+1) + " second(s)]"))
 
     # Save background-subtracted acceptor/donor images as TIFF
     if (tiff_save):
@@ -274,5 +261,5 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
         tiff_time_end = timer()
 
         if (verbose):
-            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)) + " second(s)]"))
+            print(("Saving " + val.capitalize() + " TIFF stack in " + work_out_path + '_back_' + val + '.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]"))
 

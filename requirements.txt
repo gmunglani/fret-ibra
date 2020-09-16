@@ -1,11 +1,11 @@
-numpy
-scipy
-scikit-image
-scikit-learn
-configparser
-pims
-opencv-python
-matplotlib
-h5py
-imreg_dft
+numpy==1.18.1
+scipy==1.4.1
+scikit-image==0.16.2
+scikit-learn==0.22.2
+configparser==5.0.0
+pims==0.4.1
+opencv-python==4.2.0.34
+matplotlib==3.2.1
+h5py==2.10.0
+imreg_dft==2.0.0
 
