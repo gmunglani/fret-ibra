@@ -443,6 +443,7 @@ def background_plots(stack,work_out_path):
     ax5.set_xlim(0, 1)
     ax5.set_ylim(0, 1)
     ax5.set_zlim(0, 1)
+<<<<<<< HEAD
     ax5.xaxis.set_ticks([0,0.5,1])
     ax5.yaxis.set_ticks([0,0.5,1])
     ax5.zaxis.set_ticks([0,0.5,1])
@@ -454,6 +455,12 @@ def background_plots(stack,work_out_path):
     ax5.set_xlabel('Variance', labelpad=1, fontsize=8)
     ax5.set_ylabel('Skewness', labelpad=1, fontsize=8)
     ax5.set_zlabel('Median', labelpad=1, fontsize=8)
+=======
+    ax5.grid(True)
+    ax5.set_xlabel('Variance', labelpad=10)
+    ax5.set_ylabel('Skewness', labelpad=10)
+    ax5.set_zlabel('Median', labelpad=10)
+>>>>>>> 778431d8dd4d881619de1feb52c06fa6e6fd9ba1
     varn = stack.propf[:, :, 0]
     xyz = varn[stack.maskf[:, 0]]
     xyz2 = varn[[not i for i in stack.maskf[:, 0]]]
