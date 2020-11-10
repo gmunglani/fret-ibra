@@ -211,6 +211,7 @@ def ratio(verbose, logger, work_out_path, crop, res, register, union, h5_save, t
 
     # Loop through frames
     for count, frame in list(zip(frange, brange)):
+
         if (verbose):
             print("(Ratio Processing) Frame Number: " + str(count + 1))
 
@@ -271,6 +272,7 @@ def ratio(verbose, logger, work_out_path, crop, res, register, union, h5_save, t
     if (h5_save or tiff_save):
         # Calculate ratio stack
         ratio = ratio_calc(acceptorc, donorc)
+
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):

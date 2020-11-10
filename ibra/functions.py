@@ -9,7 +9,7 @@ from matplotlib import rcParams
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.animation as animation
-from matplotlib.ticker import MaxNLocator, FormatStrFormatter, PercentFormatter
+from matplotlib.ticker import MaxNLocator, FormatStrFormatter, PercentFormatter, AutoMinorLocator
 import mpl_toolkits.mplot3d.axes3d as p3
 import logging
 from timeit import default_timer as timer
@@ -20,7 +20,11 @@ from scipy.optimize import curve_fit
 from sklearn import linear_model
 from scipy import ndimage
 
-rcParams['font.family'] = 'serif'
+rcParams['font.sans-serif'] = 'Helvetica'
+rcParams['font.family'] = 'sans-serif'
+rcParams['svg.fonttype'] = 'none'
+rcParams['axes.linewidth'] = 0.5
+rcParams['lines.linewidth'] = 0.5
 
 # Create animation of background subtraction
 def background_animation(verbose,stack,work_out_path,frange):
@@ -244,20 +248,21 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
 
     # Set up plot
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xplot,ya,c='darkgrey')
-    ax.plot(xplot,yd,c='k')
+    fig, ax = plt.subplots(figsize=(2.1, 1.4))
+    ax.plot(xplot,ya,c=(0.627,0.153,0.498), linewidth=0.5)
+    ax.plot(xplot,yd,c=(1,0.518,0), linewidth=0.5)
 
-    plt.ylabel(ylabel,labelpad=15, fontsize=22)
+    plt.ylabel(ylabel,labelpad=5, fontsize=6)
     ax.yaxis.set_major_formatter(PercentFormatter(decimals=dec))
     ax.yaxis.set_major_locator(MaxNLocator(6))
-    plt.yticks(fontsize=18)
-    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    # plt.yticks(fontsize=6)
+    plt.yticks(np.arange(2.90, 2.96, step=0.03), fontsize=6)
+    plt.xlabel('Frame Number',labelpad=5, fontsize=6)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.xticks(fontsize=18)
+    plt.xticks(fontsize=6)
 
-    plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=18)
-    plt.savefig(work_out_path + name, bbox_inches='tight')
+    #plt.legend(['Acceptor','Donor'],fancybox=None,fontsize=6)
+    plt.savefig(work_out_path + name +'.svg', format='svg', bbox_inches='tight')
 
 
 def block(data,size):
@@ -340,7 +345,9 @@ def background_plots(stack,work_out_path):
     # Contour plot for original image (optional gaussian if needed) with colorbar and isoline heignt
     fig, ax = plt.subplots(figsize=(12, 8))
     #stack.im_medianf[:,:,0] = ndimage.gaussian_filter(stack.im_medianf[:,:,0],sigma=0.2)
-    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,500,1000,2500],alpha=0.3,cmap='seismic')
+    #contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,100,250,500,1000,1500,2000], nchunk=1, alpha=0.3,cmap='Accent')
+    contours = plt.contourf(X1,Y1, stack.im_medianf[:,:,0], [0,250,450,800,1200,1600,1800], nchunk=1, alpha=0.3,cmap='seismic')
+
     plt.colorbar(),stack.im_medianf[:,:,0].shape
     plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
 
@@ -363,8 +370,10 @@ def background_plots(stack,work_out_path):
     #################################################################################################################################3
     # Contour plot for background subtracted image (optional gaussian if needed) with colorbar and isoline heignt
     fig4, ax4 = plt.subplots(figsize=(12, 8))
-    stack.im_framef[0, :, :] = ndimage.gaussian_filter(stack.im_framef[0, :, :],sigma=0.1)
-    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,500,1000,2500],alpha=0.3,cmap='seismic')
+    #stack.im_framef[0, :, :] = ndimage.gaussian_filter(stack.im_framef[0, :, :],sigma=0.2)
+    #contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,100,250,500,1000,1500,2000],nchunk=1, alpha=0.3,cmap='Accent')
+    contours = plt.contourf(X1,Y1, stack.im_framef[0, :, :], [0,250,450,800,1200,1600,1800],nchunk=1, alpha=0.3,cmap='seismic')
+
     plt.colorbar()
     plt.clabel(contours, colors='black',inline=True, fontsize=10, fmt='%d')
 
@@ -382,43 +391,49 @@ def background_plots(stack,work_out_path):
     ax4.grid(False)
     plt.savefig(work_out_path + '_contour_test2.png', bbox_inches='tight')
 
-
+    fig6, ax6 = plt.subplots(figsize=(12, 8))
+    cbar = plt.colorbar(contours,ax=ax6)
+    ax6.remove()
+    cbar.set_ticklabels([])
+    plt.savefig(work_out_path + '_colorbar_test2.png', bbox_inches='tight', dpi=300)
 
     #################################################################################################################################3
     # Histogram of area with only background
-    fig2, ax2 = plt.subplots(figsize=(12, 8))
-    n, bins, patches = ax2.hist(stack.im_side, bins=[250,270,290,310,330,350,370], density=True, facecolor='darkgrey', alpha=0.75, histtype='bar', ec='w')
+    fig2, ax2 = plt.subplots(figsize=(4.2, 2.8))
+    n, bins, patches = ax2.hist(stack.im_side, np.arange(0,2500,20), density=True, facecolor=(0,0.047,1), alpha=0.75, histtype='bar', ec='w')
     ax2.set_yticklabels([])
     ax2.set_yticklabels([])
-    ax2.set_xlim(0, 2500)
+    ax2.set_xlim(0, 2000)
     ax2.tick_params(
         axis='y',  # changes apply to the x-axis
         which='both',  # both major and minor ticks are affected
         left=False,
         right=False)  # labels along the bottom edge are off
-    plt.xticks(fontsize=18)
-    plt.savefig(work_out_path + '_hist_test1.png', bbox_inches='tight')
+    plt.xticks(fontsize=12)
+    plt.savefig(work_out_path + '_hist_test1.svg', bbox_inches='tight')
 
 
 
     #################################################################################################################################3
     # Histogram of area with mostly signal
-    fig3, ax3 = plt.subplots(figsize=(12, 8))
-    n, bins, patches = ax3.hist(stack.im_side2, np.arange(1600,2500,20), density=True, facecolor='darkgrey', alpha=0.75, histtype='bar', ec='w')
+    fig3, ax3 = plt.subplots(figsize=(4.2, 2.8))
+    n, bins, patches = ax3.hist(stack.im_side2, np.arange(0,2500,20), density=True, facecolor=(1,0,0.09), alpha=0.75, histtype='bar', ec='w')
     ax3.set_yticklabels([])
-    ax3.set_xlim(0, 2500)
+    ax3.set_xlim(0, 2000)
     ax3.tick_params(
         axis='y',  # changes apply to the x-axis
         which='both',  # both major and minor ticks are affected
         left=False,
         right=False)  # labels along the bottom edge are off
-    plt.xticks(fontsize=18)
-    plt.savefig(work_out_path + '_hist_test2.png', bbox_inches='tight')
+    plt.xticks(fontsize=12)
+    plt.savefig(work_out_path + '_hist_test2.svg', bbox_inches='tight')
 
 
     #################################################################################################################################
     # 3d plot of variance, skew etc
-    fig5 = plt.figure(figsize=(12, 8))
+    rcParams
+    
+    fig5 = plt.figure(figsize=(2.1, 1.4))
     ax5 = fig5.gca(projection='3d')
     ax5.view_init(elev=30., azim=230.)
 
@@ -428,17 +443,31 @@ def background_plots(stack,work_out_path):
     ax5.set_xlim(0, 1)
     ax5.set_ylim(0, 1)
     ax5.set_zlim(0, 1)
-    ax5.grid(False)
+<<<<<<< HEAD
+    ax5.xaxis.set_ticks([0,0.5,1])
+    ax5.yaxis.set_ticks([0,0.5,1])
+    ax5.zaxis.set_ticks([0,0.5,1])
+    ax5.xaxis.set_minor_locator(AutoMinorLocator(5))
+    ax5.yaxis.set_minor_locator(AutoMinorLocator(5))
+    ax5.zaxis.set_minor_locator(AutoMinorLocator(5))
+    ax5.tick_params(labelsize=7, pad=0)
+    ax5.grid(True, which='both', linewidth=0.5)
+    ax5.set_xlabel('Variance', labelpad=1, fontsize=8)
+    ax5.set_ylabel('Skewness', labelpad=1, fontsize=8)
+    ax5.set_zlabel('Median', labelpad=1, fontsize=8)
+=======
+    ax5.grid(True)
     ax5.set_xlabel('Variance', labelpad=10)
     ax5.set_ylabel('Skewness', labelpad=10)
     ax5.set_zlabel('Median', labelpad=10)
+>>>>>>> 778431d8dd4d881619de1feb52c06fa6e6fd9ba1
     varn = stack.propf[:, :, 0]
     xyz = varn[stack.maskf[:, 0]]
     xyz2 = varn[[not i for i in stack.maskf[:, 0]]]
-    ax5.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], c='red')
-    ax5.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], c='blue', s=80)
+    ax5.scatter(xyz2[:, 0], xyz2[:, 1], xyz2[:, 3], marker='.', c=(1,0,0.0), alpha=1, s=1)
+    ax5.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 3], marker='.', c=(0,0.047,1), alpha=1, s=10)
 
-    plt.savefig(work_out_path + '_3d_scatter.png', bbox_inches='tight')
+    plt.savefig(work_out_path + '_3d_scatter.svg', bbox_inches='tight')
 
 def background_intensities(acceptoro, acceptori, donor, work_out_path):
     """Median channel intensity per frame"""
@@ -454,17 +483,17 @@ def background_intensities(acceptoro, acceptori, donor, work_out_path):
     _, yd = list(zip(*donor_plot))
 
     # Set up plot
-    fig, ax = plt.subplots(figsize=(12, 8))
-    ax.plot(xplot,ya,c='darkgrey',linestyle='--')
-    ax.plot(xplot,yo,c='darkgrey')
-    ax.plot(xplot,yd,c='k')
+    fig, ax = plt.subplots(figsize=(2.1, 1.4))
+    ax.plot(xplot,ya,c=(0.627,0.153,0.498),linestyle=':')
+    ax.plot(xplot,yo,c=(0.627,0.153,0.498))
+    ax.plot(xplot,yd,c=(1,0.518,0))
 
-    plt.ylabel('Median Intensity/Bit Depth',labelpad=15, fontsize=22)
+    plt.ylabel('Median Intensity/Bit Depth',labelpad=5, fontsize=6)
     ax.yaxis.set_major_formatter(PercentFormatter(decimals=0))
     ax.yaxis.set_major_locator(MaxNLocator(6))
-    plt.yticks(fontsize=18)
-    plt.xlabel('Frame Number',labelpad=15, fontsize=22)
+    plt.yticks(np.arange(25, 45, step=5), fontsize=6)
+    plt.xlabel('Frame Number',labelpad=5, fontsize=6)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-    plt.xticks(fontsize=18)
+    plt.xticks(fontsize=6)
 
-    plt.savefig(work_out_path + '_intensity_plot_comparison.png', bbox_inches='tight')
+    plt.savefig(work_out_path + '_intensity_plot_comparison.svg', bbox_inches='tight')
