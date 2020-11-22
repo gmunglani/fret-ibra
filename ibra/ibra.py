@@ -123,6 +123,9 @@ def main():
     assert (resolution in res_types), "resolution must be 8, 12, or 16-bit"
     res = np.power(2, resolution) - 1
 
+    # Input parallel option
+    parallel = config['File Parameters'].getboolean('parallel')
+
     # Open log file
     logger = logit(work_out_path)
 
@@ -133,11 +136,12 @@ def main():
         eps = float(config['Background Parameters'].get('eps'))
 
         assert (win > 0), "window should be a positive integer"
-        assert (eps >= 0), "eps should be a float >= 0"
+        assert (eps > 0), "eps value must be a positive float between 0 and 1"
+        assert (eps <= 1), "eps value must be a positive float between 0 and 1"
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm
-        bs.background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange)
+        bs.background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,parallel,anim_save,h5_save,tiff_save,frange)
 
     # Ratio image module
     if (module == 2):

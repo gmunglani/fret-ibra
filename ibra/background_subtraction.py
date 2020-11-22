@@ -94,18 +94,30 @@ class stack():
 
 
     # Run background subtraction stack workflow
-    def stack_workflow(self):
-        # Create frame class and submit processes
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = []
-            for pos, count in enumerate(stack.frange):
-                fr = frame(np.asarray(self.im_stack[count]), count, pos)
-                process = executor.submit(fr.frame_workflow)
-                futures.append(process)
+    def stack_workflow(self,parallel):
+        if (parallel):
+            # Create frame class and submit processes
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                futures = []
+                for pos, count in enumerate(stack.frange):
+                    fr = frame(np.asarray(self.im_stack[count]), count, pos)
+                    process = executor.submit(fr.frame_workflow)
+                    futures.append(process)
 
-        # Combine parallelized output into updated metrics
-        for future in concurrent.futures.as_completed(futures):
-            self.metric_update(future.result())
+            # Combine parallelized output into updated metrics
+            for future in concurrent.futures.as_completed(futures):
+                self.metric_update(future.result())
+
+        else:
+            for pos, count in enumerate(stack.frange):
+                # Initialize frame
+                fr = frame(np.asarray(self.im_stack[count]), count, pos)
+
+                # Run frame processing
+                result = fr.frame_workflow()
+
+                # Update metrics
+                self.metric_update(result)
 
 
 # Create single image frame class
@@ -202,15 +214,12 @@ class frame(stack):
         return (self.pos, self.im_frame_orig, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
 
 
-def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
+def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,parallel,anim_save,h5_save,tiff_save,frange):
     # Run through the donor/acceptor subtraction on a per frame basis
     if module == 0:
         val = 'acceptor'
     else:
         val = 'donor'
-
-    assert (eps > 0), "eps value must be a positive float between 0 and 1"
-    assert (eps <= 1), "eps value must be a positive float between 0 and 1"
 
     # Start time
     time_start = timer()
@@ -218,6 +227,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     # Create stack class from input TIFF file
     all = stack(work_inp_path,val,ext)
 
+    # Frame number check
     assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
 
     # Assign frame parameters
@@ -230,7 +240,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     all.metric_prealloc()
 
     # Run image processing workflow
-    all.stack_workflow()
+    all.stack_workflow(parallel)
 
     # End time
     time_end = timer()
