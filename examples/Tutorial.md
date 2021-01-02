@@ -19,6 +19,11 @@ frames = 1:6
 bit_depth = 12
 ```
 
+Finally, the user has the choice to turn on the parallel option. Note that some newer Mac distributions are not compatible with the parallelization modules used in this package.
+```txt
+parallel = 1
+```
+
 ## Modules
 The user then has the option to run one of four modules. These modules are designed to run sequentially. The workflow is as follows:
 * 0 -> Background subtraction (acceptor channel)
