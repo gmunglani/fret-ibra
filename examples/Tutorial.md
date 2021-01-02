@@ -19,7 +19,7 @@ frames = 1:6
 bit_depth = 12
 ```
 
-Finally, the user has the choice to turn on the parallel option. Note that some newer Mac distributions are not compatible with the parallelization modules used in this package.
+Finally, the user has the choice to turn on the parallel option. Note that some newer Mac distributions are not compatible with the parallelization module used in this package.
 ```txt
 parallel = 1
 ```
