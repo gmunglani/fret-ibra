@@ -267,7 +267,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     # Save background-subtracted acceptor/donor images as TIFF
     if (tiff_save):
         tiff_time_start = timer()
-        tiff(all.im_framef, work_out_path + '_' + val + '.tif')
+        tiff(all.im_framef, work_out_path + '_' + val + '_back.tif')
         tiff_time_end = timer()
 
         if (verbose):
