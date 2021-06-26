@@ -10,7 +10,7 @@ git clone https://github.com/gmunglani/fret-ibra.git
 cd fret-ibra
 pip3 install -r requirements.txt
 ```
-Additional requirements: ffmpeg
+Additional requirements: ffmpeg \
 Tested Python versions: 3.6-3.8
 
 ## Usage
