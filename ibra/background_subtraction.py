@@ -37,6 +37,8 @@ class stack():
     @classmethod
     def set_frame_parameters(cls,win):
         # Find frame size and set window size
+        assert (cls.siz1 % win == 0), "nwindows must be a factor of the X and Y image resolution"
+        assert (cls.siz2 % win == 0), "nwindows must be a factor of the X and Y image resolution"
         cls.dim = np.int16(cls.siz2/win)
         cls.height = np.int16(win)
         cls.width = np.int16(cls.siz1/cls.dim)

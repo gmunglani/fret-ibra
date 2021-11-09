@@ -267,6 +267,8 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
 
 def block(data,size):
     """Reshape image stack for faster processing"""
+    print(data.shape)
+    print(size)
     return (data.reshape(data.shape[0] // size, size, -1, size)
             .swapaxes(1, 2)
             .reshape(-1, size, size))
