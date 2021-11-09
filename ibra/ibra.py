@@ -135,7 +135,8 @@ def main():
         win = int(config['Background Parameters'].get('nwindow'))
         eps = float(config['Background Parameters'].get('eps'))
 
-        assert (win > 0), "window should be a positive integer"
+        assert (win > 0), "nwindow should be a positive integer"
+        assert (win >= 10), "nwindow should be greater than 10"
         assert (eps > 0), "eps value must be a positive float between 0 and 1"
         assert (eps <= 1), "eps value must be a positive float between 0 and 1"
         assert (int(anim_save==True)+int(h5_save==True) > 0), "animation and/or h5_save must be activated"
