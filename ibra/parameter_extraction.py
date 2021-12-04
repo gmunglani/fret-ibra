@@ -80,11 +80,11 @@ def main_extract(cfname,tiff_save,verbose,h5_save,anim_save):
         assert (int(anim_save == True) + int(h5_save == True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm for either acceptor or donor stack
-        bs.background(verbose, logger, work_inp_path, work_out_path, ext, res, module, eps, win, parallel, anim_save,
+        if module == 2:
+            bs.background(verbose, logger, work_inp_path, work_out_path, ext, res, module, eps, win, parallel, anim_save,
                       h5_save, tiff_save, frange)
-
         # Automated background + ratio modules
-        if module == 3:
+        elif module == 3:
             # Run the background subtraction algorithm for the acceptor stack
             bs.background(verbose, logger, work_inp_path, work_out_path, ext, res, 0, eps, win, parallel, anim_save,
                           h5_save, tiff_save, frange)

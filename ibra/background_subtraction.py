@@ -29,7 +29,7 @@ class stack():
         stack.val = val
 
         # Import stack
-        im_path =  work_inp_path + '_' + stack.val + '.' + ext
+        im_path = work_inp_path + '_' + stack.val + '.' + ext
         self.im_stack = pims.open(im_path)
         stack.siz1, stack.siz2 = self.im_stack.frame_shape
 

@@ -12,13 +12,13 @@ def open_file(arg,dire):
     arg.delete(0,tk.END)
     arg.insert(0,file)
 
-def find_directory(arg,dire):
-    save_folder = filedialog.askdirectory(initialdir = dire,title = "Select folder",mustexist = True)
-    arg.delete(0,tk.END)
-    arg.insert(0,save_folder)
+# def find_directory(arg,dire):
+#     save_folder = filedialog.askdirectory(initialdir = dire,title = "Select folder",mustexist = True)
+#     arg.delete(0,tk.END)
+#     arg.insert(0,save_folder)
 
-def get_variables(dire,con_str,acc_str,don_str,save_str,range_str,res_str,par_state,nwindow_str,eps_entry_str,eps_check_str\
-                  ,crop_str,register_state,union_state,acc_bleach_str,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line):
+def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str,eps_entry_str,eps_check_str,crop_str,register_state\
+                  ,union_state,acc_bleach_str,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line):
 
     # Run options and verbose flag
     option = int(option_dict[option_line.get()])
@@ -51,12 +51,6 @@ def get_variables(dire,con_str,acc_str,don_str,save_str,range_str,res_str,par_st
         assert(input_path == don_input_path or len(don_input_path) == 0), "Acceptor and Donor stacks must be in the same directory"
         assert(len(don_input_path) > 0 or option == 0), "Run option requires Donor stack filename"
 
-        # Set the folder to save the config file in
-        if len(save_str.get()) == 0:
-            save_folder = dire
-        else:
-            save_folder = save_str.get()
-
         # Find the epsilon values
         if (eps_check_str.get() == 1):
             eps = 0.01
@@ -78,7 +72,7 @@ def get_variables(dire,con_str,acc_str,don_str,save_str,range_str,res_str,par_st
         fit = bleach_fit.get()
 
         # Create directory for config file and place empty config file in it
-        new_path = save_folder+'/'+filename
+        new_path = dire+'/'+filename
         if not os.path.exists(new_path):
             os.makedirs(new_path)
 
@@ -175,13 +169,13 @@ def main_gui():
     donor_entry.grid(sticky="W", row=5, column=2)
     ttk.Button(frm2, text="Choose Path", width=12, command=lambda:open_file(donor_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
 
-    frm3 = tk.Frame(root,padx=5,pady=1)
-    frm3.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm3, text='Output Folder'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
-    save_str = tk.StringVar(root)
-    save_entry = ttk.Entry(frm3, textvariable = save_str, width=50)
-    save_entry.grid(sticky="W", row=5, column=2)
-    ttk.Button(frm3, text="Choose Path", width=12, command=lambda: find_directory(save_entry, dire)).grid(sticky="W",row=5,column=3,padx=2)
+    # frm3 = tk.Frame(root,padx=5,pady=1)
+    # frm3.pack(side="top",fill="x",expand=True)
+    # ttk.Label(frm3, text='Output Folder'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
+    # save_str = tk.StringVar(root)
+    # save_entry = ttk.Entry(frm3, textvariable = save_str, width=50)
+    # save_entry.grid(sticky="W", row=5, column=2)
+    # ttk.Button(frm3, text="Choose Path", width=12, command=lambda: find_directory(save_entry, dire)).grid(sticky="W",row=5,column=3,padx=2)
 
     frm_line1 = tk.Frame(root,padx=5,pady=1)
     frm_line1.pack(side="top", fill="x", expand=True)
@@ -362,7 +356,7 @@ def main_gui():
 
     frm17 = tk.Frame(root,padx=5,pady=1)
     frm17.pack(side="top",fill="x",expand=True)
-    ttk.Button(frm17, text="Run", command=lambda:get_variables(dire,con_str,acc_str,don_str,save_str,range_str,res_str,par_state,nwindow_str\
+    ttk.Button(frm17, text="Run", command=lambda:get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str\
                                                                   ,eps_entry_str,eps_check_str,crop_str,register_state,union_state,acc_bleach_str\
                                                                   ,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line), width=10).grid(row=5,column=1,padx=240)
 
