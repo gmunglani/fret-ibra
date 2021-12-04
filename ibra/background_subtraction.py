@@ -36,10 +36,26 @@ class stack():
     # Set class frame parameters
     @classmethod
     def set_frame_parameters(cls,win):
+        # Test to find suggested values of nwindow
+        if (cls.siz1 <= 1400 or cls.siz2 <= 1400):
+            win_test = range(20,37,4)
+        else:
+            win_test = range(24,41,4)
+
+        win_res = [0] * 4
+        for winn, winc in enumerate(win_test):
+            if (cls.siz1 % winc == 0 and cls.siz2 % winc == 0):
+                win_res[winn] = 1
+
+        sug = win_test[win_res.index(1)]
+
         # Check nwindows parameter
-        assert (cls.siz1 % win == 0), "nwindows must be a factor of the X and Y image resolution"
-        assert (cls.siz2 % win == 0), "nwindows must be a factor of the X and Y image resolution"
-        assert (cls.siz2/win <= 60), "nwindows should be reduced"
+        ass_str1 = f"nwindows must be a factor of the X and Y image resolution (suggested value: {sug})"
+        ass_str2 = f"nwindows should be increased (suggested value: {sug})"
+        assert (cls.siz1 % win == 0), ass_str1
+        assert (cls.siz2 % win == 0), ass_str1
+        assert (cls.siz1/win <= 80.0), ass_str2
+        assert (cls.siz2/win <= 80.0), ass_str2
 
         # Find frame size and set window size
         cls.dim = np.int16(cls.siz2/win)

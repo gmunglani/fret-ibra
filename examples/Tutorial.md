@@ -25,11 +25,12 @@ parallel = 1
 ```
 
 ## Modules
-The user then has the option to run one of four modules. These modules are designed to run sequentially. The workflow is as follows:
+The user then has the option to run one of four modules. These modules are designed to run sequentially. Option 3 runs options 0-2 in batch mode. The workflow is as follows:
 * 0 -> Background subtraction (acceptor channel)
 * 1 -> Background subtraction (donor channel)
 * 2 -> Ratiometric processing
-* 3 -> Bleach correction (optional)
+* 3 -> Background subtraction (both channels) + Ratiometric processing
+* 4 -> Bleach correction (optional)
 
 ## Background subtraction
 The *background subtraction* modules (0 or 1) is run first.
@@ -83,3 +84,11 @@ acceptor_bleach_range = 1:6
 donor_bleach_range = 1:6
 fit = linear
 ```
+
+## GUI
+To improve the usability of fret-ibra, a simple GUI can be used to fill in the configuration parameters and run the package without directly accessing the config file.
+```bash
+./ibra.py -g
+```
+
+

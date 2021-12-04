@@ -16,13 +16,15 @@ Tested Python versions: 3.6-3.8
 ## Usage
 
 ```bash
-Usage: ./ibra.py -c <config file> [Options]
+Config file Usage: ./ibra.py -c <config file> [Options]
 Options: -t   Output TIFF stack
          -v   Print progress output (verbose)
          -s   Save as HDF5 file
          -a   Save background subtraction animation (only background module)
          -e   Use all output options
          -h   Print usage
+
+GUI Usage: ./ibra.py -g
 ```
 
 ## Examples
