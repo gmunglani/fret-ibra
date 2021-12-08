@@ -12,11 +12,6 @@ def open_file(arg,dire):
     arg.delete(0,tk.END)
     arg.insert(0,file)
 
-# def find_directory(arg,dire):
-#     save_folder = filedialog.askdirectory(initialdir = dire,title = "Select folder",mustexist = True)
-#     arg.delete(0,tk.END)
-#     arg.insert(0,save_folder)
-
 def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str,eps_entry_str,eps_check_str,crop_str,register_state\
                   ,union_state,acc_bleach_str,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line):
 
@@ -125,7 +120,6 @@ def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwind
 def main_gui():
     root = tk.Tk()
     root.title('fret-ibra')
-
     style = ttk.Style(root)
     style.theme_use('alt')
 
@@ -133,7 +127,7 @@ def main_gui():
 
     frm_head0 = tk.Frame(root,padx=5,pady=1)
     frm_head0.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head0,text='Upload Existing Config File', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head0,text='Upload Existing Config File', fg='slate grey',font=40).grid(sticky="W",row=5,column=1)
 
     frm0 = tk.Frame(root,padx=5,pady=1)
     frm0.pack(side="top",fill="x",expand=True)
@@ -141,7 +135,7 @@ def main_gui():
     con_str = tk.StringVar(root)
     config_entry = tk.Entry(frm0, textvariable = con_str, width=50)
     config_entry.grid(sticky="W",row=5,column=2)
-    ttk.Button(frm0, text="Choose Path", width=12, command=lambda:open_file(config_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
+    ttk.Button(frm0, text="Choose File", width=12, command=lambda:open_file(config_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
 
     frm_line0 = tk.Frame(root,padx=5,pady=1)
     frm_line0.pack(side="top", fill="x", expand=True)
@@ -151,7 +145,7 @@ def main_gui():
 
     frm_head1 = tk.Frame(root,padx=5,pady=1)
     frm_head1.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head1,text='File Parameters', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head1,text='File Input', fg='slate grey', font=40).grid(sticky="W",row=5,column=1)
 
     frm1 = tk.Frame(root,padx=5,pady=1)
     frm1.pack(side="top",fill="x",expand=True)
@@ -159,7 +153,7 @@ def main_gui():
     acc_str = tk.StringVar(root)
     acceptor_entry = tk.Entry(frm1, textvariable = acc_str, width=50)
     acceptor_entry.grid(sticky="W",row=5,column=2)
-    ttk.Button(frm1, text="Choose Path", width=12, command=lambda:open_file(acceptor_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
+    ttk.Button(frm1, text="Choose File", width=12, command=lambda:open_file(acceptor_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
 
     frm2 = tk.Frame(root,padx=5,pady=1)
     frm2.pack(side="top",fill="x",expand=True)
@@ -167,15 +161,7 @@ def main_gui():
     don_str = tk.StringVar(root)
     donor_entry = ttk.Entry(frm2, textvariable = don_str, width=50)
     donor_entry.grid(sticky="W", row=5, column=2)
-    ttk.Button(frm2, text="Choose Path", width=12, command=lambda:open_file(donor_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
-
-    # frm3 = tk.Frame(root,padx=5,pady=1)
-    # frm3.pack(side="top",fill="x",expand=True)
-    # ttk.Label(frm3, text='Output Folder'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
-    # save_str = tk.StringVar(root)
-    # save_entry = ttk.Entry(frm3, textvariable = save_str, width=50)
-    # save_entry.grid(sticky="W", row=5, column=2)
-    # ttk.Button(frm3, text="Choose Path", width=12, command=lambda: find_directory(save_entry, dire)).grid(sticky="W",row=5,column=3,padx=2)
+    ttk.Button(frm2, text="Choose File", width=12, command=lambda:open_file(donor_entry,dire)).grid(sticky="W",row=5,column=3,padx=2)
 
     frm_line1 = tk.Frame(root,padx=5,pady=1)
     frm_line1.pack(side="top", fill="x", expand=True)
@@ -185,7 +171,7 @@ def main_gui():
 
     frm_head2 = tk.Frame(root,padx=5,pady=1)
     frm_head2.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head2,text='Processing Parameters', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head2,text='Processing Parameters', fg='slate grey', font=40).grid(sticky="W",row=5,column=1)
 
     frm4 = tk.Frame(root,padx=5,pady=1)
     frm4.pack(side="top",fill="x",expand=True)
@@ -219,13 +205,13 @@ def main_gui():
 
     frm_head3 = tk.Frame(root,padx=5,pady=1)
     frm_head3.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head3,text='Background Subtraction Parameters', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head3,text='Background Subtraction Parameters', fg='slate grey', font=40).grid(sticky="W",row=5,column=1)
 
     frm7 = tk.Frame(root,padx=5,pady=1)
     frm7.pack(side="top",fill="x",expand=True)
     ttk.Label(frm7,text='Number of Windows'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     nwindow_str = tk.StringVar(root)
-    nwindow_str.set(24)
+    nwindow_str.set(40)
     nwindow_entry = ttk.Entry(frm7, textvariable = nwindow_str, width=10)
     nwindow_entry.grid(sticky="W",row=5,column=2,padx=2)
 
@@ -249,7 +235,7 @@ def main_gui():
 
     frm_head4 = tk.Frame(root,padx=5,pady=1)
     frm_head4.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head4,text='Ratio Processing Parameters', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head4,text='Ratio Processing Parameters', fg='slate grey', font=40).grid(sticky="W",row=5,column=1)
 
     frm9 = tk.Frame(root,padx=5,pady=1)
     frm9.pack(side="top",fill="x",expand=True)
@@ -283,7 +269,7 @@ def main_gui():
 
     frm_head5 = tk.Frame(root,padx=5,pady=1)
     frm_head5.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head5,text='Bleach Processing Parameters', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head5,text='Bleach Processing Parameters', fg='slate grey', font=40).grid(sticky="W",row=5,column=1)
 
     frm12 = tk.Frame(root,padx=5,pady=1)
     frm12.pack(side="top",fill="x",expand=True)
@@ -319,7 +305,7 @@ def main_gui():
 
     frm_head6 = tk.Frame(root,padx=5,pady=1)
     frm_head6.pack(side="top",fill="x",expand=True)
-    ttk.Label(frm_head6,text='Run Parameters', font=40).grid(sticky="W",row=5,column=1)
+    tk.Label(frm_head6,text='Run Parameters', fg='slate grey', font=40).grid(sticky="W",row=5,column=1)
 
     frm15 = tk.Frame(root,padx=5,pady=1)
     frm15.pack(side="top",fill="x",expand=True)
@@ -359,5 +345,9 @@ def main_gui():
     ttk.Button(frm17, text="Run", command=lambda:get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str\
                                                                   ,eps_entry_str,eps_check_str,crop_str,register_state,union_state,acc_bleach_str\
                                                                   ,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line), width=10).grid(row=5,column=1,padx=240)
+
+    frm_head7 = tk.Frame(root,padx=5,pady=1)
+    frm_head7.pack(side="top",fill="x",expand=True)
+    tk.Label(frm_head7,text='For detailed parameter descriptions visit: github.com/gmunglani/fret-ibra/blob/gui/examples/Tutorial.md' ,font=40).grid(sticky="W",row=5,column=1)
 
     root.mainloop()

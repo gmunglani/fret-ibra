@@ -1,11 +1,13 @@
 # Tutorial
-The acceptor and donor image stacks should first be visualised in a package like ImageJ to extract general parameters like the range of frames of interest, region of interest, bit-depth, resolution, and the presence of shading/noise. These parameters are then set in the config file (.cfg) which also includes the path to the image stack files and other options for each module. A log file is generated with details on the input parameters after each module run.
+The acceptor and donor image stacks should first be visualised in a package like ImageJ to extract general parameters like the range of frames of interest, region of interest, bit-depth, resolution, and the presence of shading/noise. These parameters are then set in the config file (.cfg) which also includes the path to the image stack files and other options for each module. A log file is generated with details of the input parameters after each module run.
 
 The *Config_tutorial.cfg* file in */ibra* is used to demonstrate the functionality of this toolkit. Before processing, the donor and acceptor channel image stacks should be renamed using the following format
 ```txt
-Acceptor *file_identifier*_acceptor.tiff
-Donor    *file_idenfitier*_donor.tiff
+Acceptor *file_identifier*_acceptor.tif
+Donor    *file_idenfitier*_donor.tif
 ```
+If the images to be processed are single channel images, please add only the **acceptor** suffix to the filenames to process them.
+
 First, the *input_path* (**absolute path**), *filename*, and *extension* parameters need to be set.
 ```txt
 input_path = ./examples/stack 
@@ -29,7 +31,7 @@ The user then has the option to run one of four modules. These modules are desig
 * 0 -> Background subtraction (acceptor channel)
 * 1 -> Background subtraction (donor channel)
 * 2 -> Ratiometric processing
-* 3 -> Background subtraction (both channels) + Ratiometric processing
+* 3 -> Background subtraction (both channels) + Ratiometric processing (optional)
 * 4 -> Bleach correction (optional)
 
 ## Background subtraction
@@ -38,7 +40,8 @@ The *background subtraction* modules (0 or 1) is run first.
 option = 0
 ```
 
-The background modules' parameters include *nwindow* (the number of tiles along the long axis of the image that the frame will be divided into) and the acceptor or donor channel *eps* values (depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* should be a factor of the image width (default: 40 for 1280X960).
+The background modules' parameters include *nwindow* (the number of tiles along the long axis of the image that the frame will be divided into) and the acceptor or donor channel *eps* values (depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* **should be a factor of the image resolution** (default: 40 for 1280X960). If the *nwindow* parameter provided is unsuitable to the image resolution, an error will be returned with a suggested initial value.
+
 Note, that the higher the *eps* value, the larger the number of pixels that are considered foreground. Very high *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm (default: 0.01). 
 ```txt
 nwindow = 40
@@ -86,9 +89,13 @@ fit = linear
 ```
 
 ## GUI
-To improve the usability of fret-ibra, a simple GUI can be used to fill in the configuration parameters and run the package without directly accessing the config file.
+To improve the usability of the toolkit, a simple GUI can be used to fill in the configuration parameters and run the package without directly accessing the config file.
 ```bash
 ./ibra.py -g
 ```
+The GUI parameters are identical to the config file with the notable addition of a config file upload parameter. The specified configuration parameters can be run using the *Run* button present at the bottom of the GUI. When the *Run* button is pressed, a config file with the chosen set of parameters is saved in the */ibra* folder. This saved config file can later be directly run using the *Config Filename* field with the desired *Output Options*.
 
+It should be noted that even when using the GUI, progress and error messages will only be displayed in the run terminal.
 
+### GUI example
+![GUI](images/GUI_example.png)
