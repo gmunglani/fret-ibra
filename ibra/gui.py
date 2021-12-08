@@ -344,7 +344,7 @@ def main_gui():
     frm17.pack(side="top",fill="x",expand=True)
     ttk.Button(frm17, text="Run", command=lambda:get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str\
                                                                   ,eps_entry_str,eps_check_str,crop_str,register_state,union_state,acc_bleach_str\
-                                                                  ,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line), width=10).grid(row=5,column=1,padx=240)
+                                                                  ,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line), width=10).grid(row=5,column=1,padx=270)
 
     frm_head7 = tk.Frame(root,padx=5,pady=1)
     frm_head7.pack(side="top",fill="x",expand=True)

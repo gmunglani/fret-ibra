@@ -93,9 +93,9 @@ To improve the usability of the toolkit, a simple GUI can be used to fill in the
 ```bash
 ./ibra.py -g
 ```
-The GUI parameters are identical to the config file with the notable addition of a config file upload parameter. The specified configuration parameters can be run using the *Run* button present at the bottom of the GUI. When the *Run* button is pressed, a config file with the chosen set of parameters is saved in the */ibra* folder. This saved config file can later be directly run using the *Config Filename* field with the desired *Output Options*.
+The GUI parameters are identical to those in the config file with the addition of an option use an existing config file. The desired configuration can be run using the *Run* button at the bottom of the GUI. When the *Run* button is pressed, a config file with the chosen set of parameters is saved in */ibra*. This saved config file can later be directly run using the *Config Filename* field along with the desired *Output Options*.
+
+### GUI default setting
+![GUI](images/GUI_example.png)
 
 It should be noted that even when using the GUI, progress and error messages will only be displayed in the run terminal.
-
-### GUI example
-![GUI](images/GUI_example.png)
