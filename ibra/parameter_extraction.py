@@ -80,7 +80,7 @@ def main_extract(cfname,tiff_save,verbose,h5_save,anim_save):
         assert (int(anim_save == True) + int(h5_save == True) > 0), "animation and/or h5_save must be activated"
 
         # Run the background subtraction algorithm for either acceptor or donor stack
-        if module == 2:
+        if module <= 1:
             bs.background(verbose, logger, work_inp_path, work_out_path, ext, res, module, eps, win, parallel, anim_save,
                       h5_save, tiff_save, frange)
         # Automated background + ratio modules
@@ -127,3 +127,6 @@ def main_extract(cfname,tiff_save,verbose,h5_save,anim_save):
 
         # Run bleach correction algorithm
         rp.bleach(verbose, logger, work_out_path, acceptor_bound, donor_bound, fitter, h5_save, tiff_save, frange)
+
+    # Output message
+    print ("Processing is complete")
