@@ -320,14 +320,22 @@ def ratio_calc(acceptorc,donorc):
 
     # Flatten array to find intensity percentiles
     ratio_flat = np.ravel(ratio)
-    perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [10, 90], interpolation='nearest')
 
-    # Find 10th/90th percentile ratio and additive constant for scaling
-    perc_ratio = perc[0] / perc[1]
-    const = 0.123 * (1 - perc_ratio)
+    correct = False
+    if correct:
+        perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [10, 90], interpolation='nearest')
 
-    # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
-    ratio = 230.0 * (ratio / perc[1] - perc_ratio + const) / (1.0 - perc_ratio + const)
+        # Find 10th/90th percentile ratio and additive constant for scaling
+        perc_ratio = perc[0] / perc[1]
+        const = 0.123 * (1 - perc_ratio)
+
+        # Rescale ratio 10th percentile - 25, 90th percentile - 230 intensity values respectively
+        ratio = 230.0 * (ratio / perc[1] - perc_ratio + const) / (1.0 - perc_ratio + const)
+    else:
+        #perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [0, 100], interpolation='nearest')
+        #perc_ratio = perc[0] / perc[1]
+        print(np.max(ratio_flat), np.min(ratio_flat[np.nonzero(ratio_flat)]))
+        ratio = 255.0 * (ratio / np.max(ratio_flat))
 
     # Set max/min values and apply median filter
     ratio[ratio <= 0.0] = 0.0

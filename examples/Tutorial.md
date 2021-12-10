@@ -6,7 +6,7 @@ The *Config_tutorial.cfg* file in */ibra* is used to demonstrate the functionali
 Acceptor *file_identifier*_acceptor.tif
 Donor    *file_idenfitier*_donor.tif
 ```
-If the images to be processed are single channel images, please add only the **acceptor** suffix to the filenames to process them.
+If the images to be processed are single channel images, please add only the **acceptor** suffix to the filenames to process them. Note that very noisy images might benefit from being preprocessed with a narrow kernal gaussian filter.
 
 First, the *input_path* (**absolute path**), *filename*, and *extension* parameters need to be set.
 ```txt

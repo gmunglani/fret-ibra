@@ -73,8 +73,8 @@ def main_extract(cfname,tiff_save,verbose,h5_save,anim_save):
         win = int(config['Background Parameters'].get('nwindow'))
         eps = float(config['Background Parameters'].get('eps'))
 
-        assert (win >= 10), "nwindow should be between 10 and 50"
-        assert (win <= 50), "nwindow should be between 10 and 50"
+        assert (win >= 10), "nwindow should be between 10 and 70"
+        assert (win <= 70), "nwindow should be between 10 and 70"
         assert (eps > 0), "eps value must be a positive float between 0 and 1"
         assert (eps <= 1), "eps value must be a positive float between 0 and 1"
         assert (int(anim_save == True) + int(h5_save == True) > 0), "animation and/or h5_save must be activated"

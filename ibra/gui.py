@@ -252,7 +252,7 @@ def main_gui():
     frm10.pack(side="top",fill="x",expand=True)
     ttk.Label(frm10,text='Register'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     register_state = tk.IntVar(root)
-    register_state.set(0)
+    register_state.set(1)
     register_check = ttk.Checkbutton(frm10,variable=register_state)
     register_check.grid(sticky="W",row=5,column=2)
 
@@ -260,7 +260,7 @@ def main_gui():
     frm11.pack(side="top",fill="x",expand=True)
     ttk.Label(frm11,text='Union'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     union_state = tk.IntVar(root)
-    union_state.set(0)
+    union_state.set(1)
     union_check = ttk.Checkbutton(frm11,variable=union_state)
     union_check.grid(sticky="W",row=5,column=3)
 
