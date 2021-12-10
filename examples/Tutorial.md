@@ -6,7 +6,7 @@ The *Config_tutorial.cfg* file in */ibra* is used to demonstrate the functionali
 Acceptor *file_identifier*_acceptor.tif
 Donor    *file_idenfitier*_donor.tif
 ```
-If the images to be processed are single channel images, please add only the **acceptor** suffix to the filenames to process them. Note that very noisy images might benefit from being preprocessed with a narrow kernal gaussian filter.
+If the images to be processed are single channel images, please add only the **acceptor** suffix to the filenames to process them. Note that noisy/confocal images might benefit from being preprocessed with a narrow kernal gaussian filter.
 
 First, the *input_path* (**absolute path**), *filename*, and *extension* parameters need to be set.
 ```txt
@@ -40,7 +40,7 @@ The *background subtraction* modules (0 or 1) is run first.
 option = 0
 ```
 
-The background modules' parameters include *nwindow* (the number of tiles along the long axis of the image that the frame will be divided into) and the acceptor or donor channel *eps* values (depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* **should be a factor of the image resolution** (default: 40 for 1280X960). If the *nwindow* parameter provided is unsuitable to the image resolution, an error will be returned with a suggested initial value.
+The background modules' parameters include *nwindow* (the number of tiles along the long axis of the image that the frame will be divided into) and the acceptor or donor channel *eps* values (depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* **should be a factor of the image resolution** (default: 40 for 1280X960). If the *nwindow* parameter provided is unsuited to the image resolution, an error will be returned with a suggested initial value.
 
 Note, that the higher the *eps* value, the larger the number of pixels that are considered foreground. Very high *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm (default: 0.01). 
 ```txt

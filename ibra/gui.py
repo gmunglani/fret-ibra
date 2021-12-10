@@ -12,7 +12,7 @@ def open_file(arg,dire):
     arg.delete(0,tk.END)
     arg.insert(0,file)
 
-def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str,eps_entry_str,eps_check_str,crop_str,register_state\
+def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str,eps_entry_str,crop_str,register_state\
                   ,union_state,acc_bleach_str,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line):
 
     # Run options and verbose flag
@@ -47,12 +47,10 @@ def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwind
         assert(len(don_input_path) > 0 or option == 0), "Run option requires Donor stack filename"
 
         # Find the epsilon values
-        if (eps_check_str.get() == 1):
-            eps = 0.01
-        elif (len(eps_entry_str.get()) > 0):
+        if (len(eps_entry_str.get()) > 0):
             eps = eps_entry_str.get()
         else:
-            raise IOError("epsilon value must be provided or calculated")
+            raise IOError("epsilon value must be provided")
 
         # Get config parameters from the gui
         frames = range_str.get()
@@ -226,9 +224,9 @@ def main_gui():
     epsilon_entry = ttk.Entry(frm8, textvariable=eps_entry_str, width=10)
     epsilon_entry.grid(sticky="W",row=5,column=2,padx=2)
 
-    eps_check_str = tk.StringVar(root)
-    epsilon_check = ttk.Checkbutton(frm8, variable=eps_check_str, text='Use calculated value')
-    epsilon_check.grid(sticky="W",row=5,column=3)
+    #eps_check_str = tk.StringVar(root)
+    #epsilon_check = ttk.Checkbutton(frm8, variable=eps_check_str, text='Use calculated value')
+    #epsilon_check.grid(sticky="W",row=5,column=3)
 
     frm_line3 = tk.Frame(root,padx=5,pady=1)
     frm_line3.pack(side="top", fill="x", expand=True)
@@ -346,7 +344,7 @@ def main_gui():
     frm17 = tk.Frame(root,padx=5,pady=1)
     frm17.pack(side="top",fill="x",expand=True)
     ttk.Button(frm17, text="Run", command=lambda:get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwindow_str\
-                                                                  ,eps_entry_str,eps_check_str,crop_str,register_state,union_state,acc_bleach_str\
+                                                                  ,eps_entry_str,crop_str,register_state,union_state,acc_bleach_str\
                                                                   ,don_bleach_str,bleach_fit,tiff_state,h5_state,anim_state,option_dict,option_line), width=10).grid(row=5,column=1,padx=270)
 
     frm_head7 = tk.Frame(root,padx=5,pady=1)
