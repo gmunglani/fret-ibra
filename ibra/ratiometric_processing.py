@@ -208,9 +208,19 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             tvec = trans["tvec"].round(4)
             donorc[frame,:,:] = np.round(ird.transform_img(donorc[frame,:,:], tvec=tvec))
 
-        # Otsu thresholding
-        _, A_thresh = cv2.threshold(np.uint8(np.float16(acceptorc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        _, B_thresh = cv2.threshold(np.uint8(np.float16(donorc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        # Thresholding
+        acceptors = np.uint8(np.float16(acceptorc[frame, :, :]) * mult)
+        donors = np.uint8(np.float16(donorc[frame, :, :]) * mult)
+
+        # Check for max image intensity
+        if np.max(np.ravel(acceptors)) + np.max(np.ravel(donors)) > 80:
+            # Otsu thresholding for normal intensity images
+            _, A_thresh = cv2.threshold(acceptors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+            _, B_thresh = cv2.threshold(donors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        else:
+            # Simple thresholding for low intensity images
+            _, A_thresh = cv2.threshold(acceptors, 2, 255, cv2.THRESH_BINARY)
+            _, B_thresh = cv2.threshold(donors, 2, 255, cv2.THRESH_BINARY)
 
         # Setting values below threshold to zero
         acceptorc[frame,:,:] *= np.uint16(A_thresh/255)
