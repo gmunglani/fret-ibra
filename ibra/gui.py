@@ -115,9 +115,6 @@ def get_variables(dire,con_str,acc_str,don_str,range_str,res_str,par_state,nwind
         # Run pipeline using existing config file
         parameter_extraction.main_extract(cfname_exist,bool(tiff_state.get()),verbose,bool(h5_state.get()),bool(anim_state.get()))
 
-        # Pop-up message
-        tk.messagebox.showinfo("fret-ibra", "Processing is complete")
-
 def main_gui():
     root = tk.Tk()
     root.title('fret-ibra')

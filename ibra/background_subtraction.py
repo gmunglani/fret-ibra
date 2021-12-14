@@ -71,6 +71,7 @@ class stack():
         offset = (cls.dim - 1)*0.5
         stack.dist_grid = np.sqrt(np.square(np.subtract(grid[0], offset)) + np.square(np.subtract(grid[1], offset)))
 
+
     # Set class constants
     @classmethod
     def set_class_constants(cls,verbose,res,logger,frange,eps):
