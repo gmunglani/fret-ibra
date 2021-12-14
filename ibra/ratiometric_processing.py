@@ -219,8 +219,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             _, B_thresh = cv2.threshold(donors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
         else:
             # Simple thresholding for low intensity images
-            _, A_thresh = cv2.threshold(acceptors, 2, 255, cv2.THRESH_BINARY)
-            _, B_thresh = cv2.threshold(donors, 2, 255, cv2.THRESH_BINARY)
+            _, A_thresh = cv2.threshold(acceptors, 3, 255, cv2.THRESH_BINARY)
+            _, B_thresh = cv2.threshold(donors, 3, 255, cv2.THRESH_BINARY)
 
         # Setting values below threshold to zero
         acceptorc[frame,:,:] *= np.uint16(A_thresh/255)
