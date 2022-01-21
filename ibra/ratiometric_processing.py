@@ -213,7 +213,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         donors = np.uint8(np.float16(donorc[frame, :, :]) * mult)
 
         # Check for max image intensity
-        if np.amax(acceptors) + np.max(donors) > 70:
+        if np.uint16(np.amax(acceptors)) + np.uint16(np.amax(donors)) > 70:
             # Otsu thresholding for normal intensity images
             _, A_thresh = cv2.threshold(acceptors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
             _, B_thresh = cv2.threshold(donors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
