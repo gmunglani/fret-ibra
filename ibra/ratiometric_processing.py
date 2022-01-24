@@ -193,8 +193,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     acceptornz, donornz = {},{}
 
     # Set up constants for loop
-    mult = np.float16(255)/np.float16(res)
-    ires = 100/np.float16(res)
+    mult = np.float32(255)/np.float32(res)
+    ires = 100/np.float32(res)
     ipix = 100/(Xdim*Ydim)
 
     # Loop through frames
@@ -213,7 +213,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
         donors = np.uint8(np.float16(donorc[frame, :, :]) * mult)
 
         # Check for max image intensity
-        if np.uint16(np.amax(acceptors)) + np.uint16(np.amax(donors)) > 70:
+        if np.uint32(np.amax(acceptors)) + np.uint32(np.amax(donors)) > 70:
             # Otsu thresholding for normal intensity images
             _, A_thresh = cv2.threshold(acceptors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
             _, B_thresh = cv2.threshold(donors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)

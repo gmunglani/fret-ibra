@@ -320,6 +320,9 @@ def ratio_calc(acceptorc,donorc):
 
     # Flatten array to find intensity percentiles
     ratio_flat = np.ravel(ratio)
+    if np.nonzero(ratio_flat)[0].size == 0:
+        raise Exception("Ratio image is only background. Check the acceptor/donor processed stacks")
+
     perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [10, 90], interpolation='nearest')
 
     # Find 10th/90th percentile ratio and additive constant for scaling
