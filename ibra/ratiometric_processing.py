@@ -209,8 +209,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             donorc[frame,:,:] = np.round(ird.transform_img(donorc[frame,:,:], tvec=tvec))
 
         # Thresholding
-        acceptors = np.uint8(np.float16(acceptorc[frame, :, :]) * mult)
-        donors = np.uint8(np.float16(donorc[frame, :, :]) * mult)
+        acceptors = np.uint8(np.float32(acceptorc[frame, :, :]) * mult)
+        donors = np.uint8(np.float32(donorc[frame, :, :]) * mult)
 
         # Check for max image intensity
         if np.uint32(np.amax(acceptors)) + np.uint32(np.amax(donors)) > 70:
