@@ -19,6 +19,7 @@ import os
 from scipy.optimize import curve_fit
 from sklearn import linear_model
 from scipy import ndimage
+from loess import loess_1d
 
 rcParams['font.family'] = 'serif'
 
@@ -306,6 +307,13 @@ def bleach_fit(brange,frange,intensity,fitter):
         except:
             raise ValueError('Fit not found - try a larger range')
         pred = exp_func(frange, *popt)
+
+    elif (fitter == 'loess'):
+        # Fitting loess model
+        try:
+            _, pred, _ = loess_1d.loess_1d(brange, intensity_values, xnew=None, degree=1, frac=0.5, npoints=None, rotate=False, sigy=None)
+        except:
+            raise ValueError('Fit not found - try a larger range')
 
     # Bleach corrected intensity values
     corr = np.divide(pred[0], pred)

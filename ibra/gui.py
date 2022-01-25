@@ -221,10 +221,6 @@ def main_gui():
     epsilon_entry = ttk.Entry(frm8, textvariable=eps_entry_str, width=10)
     epsilon_entry.grid(sticky="W",row=5,column=2,padx=2)
 
-    #eps_check_str = tk.StringVar(root)
-    #epsilon_check = ttk.Checkbutton(frm8, variable=eps_check_str, text='Use calculated value')
-    #epsilon_check.grid(sticky="W",row=5,column=3)
-
     frm_line3 = tk.Frame(root,padx=5,pady=1)
     frm_line3.pack(side="top", fill="x", expand=True)
     canvas = tk.Canvas(frm_line3, width=500, height=10)
@@ -294,6 +290,8 @@ def main_gui():
     bleach_radio_linear.grid(sticky="W",row=5,column=2)
     bleach_radio_quad = tk.Radiobutton(frm14, text="quadratic", variable=bleach_fit, value='quadratic')
     bleach_radio_quad.grid(sticky="W",row=5,column=3)
+    bleach_radio_loess = tk.Radiobutton(frm14, text="loess", variable=bleach_fit, value='loess')
+    bleach_radio_loess.grid(sticky="W",row=5,column=4)
 
     frm_line5 = tk.Frame(root,padx=5,pady=1)
     frm_line5.pack(side="top", fill="x", expand=True)
