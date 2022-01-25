@@ -81,7 +81,7 @@ eps = 0.009
 ```
 
 ## Bleach correction
-Once all unexpected outliers have been corrected, the bleach correction module can be (optionally) run. The median intensity of the foreground in the donor and acceptor image stacks are used to estimate the range of frames (colon-separated) between which the bleaching effect can be fit. The type of fit: linear (regularized) or exponential regression must also be stated.
+Once all unexpected outliers have been corrected, the bleach correction module can be (optionally) run. The median intensity of the foreground in the donor and acceptor image stacks are used to estimate the range of frames (colon-separated) between which the bleaching effect can be fit. The type of fit: linear (regularized), exponential or loess regression must also be stated.
 ```txt
 acceptor_bleach_range = 1:6
 donor_bleach_range = 1:6
