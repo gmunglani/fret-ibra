@@ -121,7 +121,7 @@ def main_extract(cfname,tiff_save,verbose,h5_save,anim_save):
 
         # Input bleach correction for fitting and correcting image median intensity
         fitter = config['Bleach Parameters'].get('fit')
-        fits = ['linear', 'exponential','loess']
+        fits = ['linear', 'exponential', 'loess']
 
         assert (fitter in fits), "fit should be either linear, exponential or loess"
 

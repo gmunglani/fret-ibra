@@ -288,7 +288,7 @@ def main_gui():
     bleach_fit.set('linear')
     bleach_radio_linear = tk.Radiobutton(frm14, text="linear", variable=bleach_fit, value='linear')
     bleach_radio_linear.grid(sticky="W",row=5,column=2)
-    bleach_radio_quad = tk.Radiobutton(frm14, text="quadratic", variable=bleach_fit, value='quadratic')
+    bleach_radio_quad = tk.Radiobutton(frm14, text="exponential", variable=bleach_fit, value='exponential')
     bleach_radio_quad.grid(sticky="W",row=5,column=3)
     bleach_radio_loess = tk.Radiobutton(frm14, text="loess", variable=bleach_fit, value='loess')
     bleach_radio_loess.grid(sticky="W",row=5,column=4)
