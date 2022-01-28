@@ -192,7 +192,7 @@ def main_gui():
     ttk.Label(frm6,text='Parallel'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     par_state = tk.IntVar(root)
     par_state.set(0)
-    par_check = ttk.Checkbutton(frm6,variable=par_state)
+    par_check = tk.Checkbutton(frm6,variable=par_state)
     par_check.grid(sticky="W",row=5,column=2,padx=2)
 
     frm_line2 = tk.Frame(root,padx=5,pady=1)
@@ -244,7 +244,7 @@ def main_gui():
     ttk.Label(frm10,text='Register'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     register_state = tk.IntVar(root)
     register_state.set(1)
-    register_check = ttk.Checkbutton(frm10,variable=register_state)
+    register_check = tk.Checkbutton(frm10,variable=register_state)
     register_check.grid(sticky="W",row=5,column=2)
 
     frm11 = tk.Frame(root,padx=5,pady=1)
@@ -252,7 +252,7 @@ def main_gui():
     ttk.Label(frm11,text='Union'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     union_state = tk.IntVar(root)
     union_state.set(1)
-    union_check = ttk.Checkbutton(frm11,variable=union_state)
+    union_check = tk.Checkbutton(frm11,variable=union_state)
     union_check.grid(sticky="W",row=5,column=3)
 
     frm_line4 = tk.Frame(root,padx=5,pady=1)
@@ -308,17 +308,17 @@ def main_gui():
     ttk.Label(frm15,text='Output Options'.ljust(21), font=40).grid(sticky="W",row=5,column=1)
     tiff_state = tk.IntVar(root)
     tiff_state.set(1)
-    tiff_output_check = ttk.Checkbutton(frm15,text='tiff output', variable=tiff_state)
+    tiff_output_check = tk.Checkbutton(frm15,text='tiff output', variable=tiff_state)
     tiff_output_check.grid(sticky="W",row=5,column=2)
 
     h5_state = tk.IntVar(root)
     h5_state.set(1)
-    h5_output_check = ttk.Checkbutton(frm15,text='h5 output',variable=h5_state)
+    h5_output_check = tk.Checkbutton(frm15,text='h5 output',variable=h5_state)
     h5_output_check.grid(sticky="W",row=5,column=3)
 
     anim_state = tk.IntVar(root)
     anim_state.set(1)
-    anim_output_check = ttk.Checkbutton(frm15,text='animation output',variable=anim_state)
+    anim_output_check = tk.Checkbutton(frm15,text='animation output',variable=anim_state)
     anim_output_check.grid(sticky="W",row=5,column=4)
 
     frm16 = tk.Frame(root,padx=5,pady=1)
