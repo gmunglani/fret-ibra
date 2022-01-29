@@ -96,7 +96,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
     # Update log file
     logger.info('(Bleach Correction) ' + 'acceptor_bleach_frames: ' + str(acceptor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
-                + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
+                + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1) + ', fit: ' + str(fitter)
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Create plot to show median intensity over frame number after bleaching
