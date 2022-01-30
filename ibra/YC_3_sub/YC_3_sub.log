@@ -1,9 +1,0 @@
-2022-01-29 01:10:21,489 (Background Subtraction) acceptor_eps: 0.03, frames: 1-100, time: 90 sec, save: True
-2022-01-29 01:12:46,155 (Background Subtraction) donor_eps: 0.03, frames: 1-100, time: 89 sec, save: True
-2022-01-29 01:13:48,441 (Ratio Processing) frames: 1-100, time: 2 sec, save: True
-2022-01-29 01:21:23,692 (Bleach Correction) acceptor_bleach_frames: 1-100, donor_bleach_frames: 1-100, time: 1 sec, save: True
-2022-01-29 01:21:23,692 (Bleach Correction) acceptor_bleach_frames: 1-100, donor_bleach_frames: 1-100, time: 1 sec, save: True
-2022-01-29 01:21:23,692 (Bleach Correction) acceptor_bleach_frames: 1-100, donor_bleach_frames: 1-100, time: 1 sec, save: True
-2022-01-29 01:22:31,400 (Bleach Correction) acceptor_bleach_frames: 1-1713, donor_bleach_frames: 1-1713, time: 7 sec, save: True
-2022-01-29 01:22:31,400 (Bleach Correction) acceptor_bleach_frames: 1-1713, donor_bleach_frames: 1-1713, time: 7 sec, save: True
-2022-01-29 01:22:31,400 (Bleach Correction) acceptor_bleach_frames: 1-1713, donor_bleach_frames: 1-1713, time: 7 sec, save: True
