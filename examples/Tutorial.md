@@ -1,11 +1,13 @@
 # Tutorial
-The acceptor and donor image stacks should first be visualised in a package like ImageJ to extract general parameters like the range of frames of interest, region of interest, bit-depth, resolution, and the presence of shading/noise. These parameters are then set in the config file (.cfg) which also includes the path to the image stack files and other options for each module. A log file is generated with details on the input parameters after each module run.
+The acceptor and donor image stacks should first be visualised in a package like ImageJ to extract general parameters like the range of frames of interest, region of interest, bit-depth, resolution, and the presence of shading/noise. These parameters are then set in the config file (.cfg) which also includes the path to the image stack files and other options for each module. A log file is generated with details of the input parameters after each module run.
 
 The *Config_tutorial.cfg* file in */ibra* is used to demonstrate the functionality of this toolkit. Before processing, the donor and acceptor channel image stacks should be renamed using the following format
 ```txt
-Acceptor *file_identifier*_acceptor.tiff
-Donor    *file_idenfitier*_donor.tiff
+Acceptor *file_identifier*_acceptor.tif
+Donor    *file_idenfitier*_donor.tif
 ```
+If the images to be processed are single channel images, please add only the **acceptor** suffix to the filenames to process them. Note that noisy/confocal images might benefit from being preprocessed with a narrow kernal gaussian filter.
+
 First, the *input_path* (**absolute path**), *filename*, and *extension* parameters need to be set.
 ```txt
 input_path = ./examples/stack 
@@ -19,12 +21,18 @@ frames = 1:6
 bit_depth = 12
 ```
 
+Finally, the user has the choice to turn on the parallel option. Note that some newer Mac distributions are not compatible with the parallelization module used in this package.
+```txt
+parallel = 1
+```
+
 ## Modules
-The user then has the option to run one of four modules. These modules are designed to run sequentially. The workflow is as follows:
+The user then has the option to run one of four modules. These modules are designed to run sequentially. Option 3 runs options 0-2 in batch mode. The workflow is as follows:
 * 0 -> Background subtraction (acceptor channel)
 * 1 -> Background subtraction (donor channel)
 * 2 -> Ratiometric processing
-* 3 -> Bleach correction (optional)
+* 3 -> Background subtraction (both channels) + Ratiometric processing (optional)
+* 4 -> Bleach correction (optional)
 
 ## Background subtraction
 The *background subtraction* modules (0 or 1) is run first.
@@ -32,7 +40,8 @@ The *background subtraction* modules (0 or 1) is run first.
 option = 0
 ```
 
-The background modules' parameters include *nwindow* (the number of tiles along the long axis of the image that the frame will be divided into) and the acceptor or donor channel *eps* values (depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* should be a factor of the image width (default: 40 for 1280X960).
+The background modules' parameters include *nwindow* (the number of tiles along the long axis of the image that the frame will be divided into) and the acceptor or donor channel *eps* values (depending on whether *option* is set to 0 or 1) for the DBSCAN clustering algorithm. *nwindow* **should be a factor of the image resolution** (default: 40 for 1280X960). If the *nwindow* parameter provided is unsuited to the image resolution, an error will be returned with a suggested initial value.
+
 Note, that the higher the *eps* value, the larger the number of pixels that are considered foreground. Very high *eps* values can thus label background pixels as foreground, reducing the effectiveness of the background subtraction algorithm (default: 0.01). 
 ```txt
 nwindow = 40
@@ -46,7 +55,7 @@ The background subtraction module can then be run with multiple options includin
 Once this module is run, the video animation can be used to optimize the *eps* values visually. As a general rule of thumb, the lower the *eps* value, the better the background subtraction. *eps* values that are too low, result in non-convergence of the clustering algorithm for a particular frame, which is recorded in the log file. 
 
 ## Ratiometric processing
-Once both donor (*eps* of 0.01) and acceptor channels (*eps* of 0.012) have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image (by the top left and bottom right comma-separated coordinates) to the region of interest to speed up processing time. The default for *crop* is (0,0,0,0), which indicates that no cropping is performed. This module also includes boolean parameters for turning on image registration (*register*) and overlap correction (*union*). For best results, *register* and *union* should be set to 0 while the donor and acceptor channels are tested with suboptimal values of *eps*, and should only be set to 1 after the optimal values for *eps* are found.
+Once both donor (*eps* of 0.01) and acceptor channels (*eps* of 0.012) have been processed, the *ratio* processing module should be run. The options include cropping (*crop*) the original image (by the top left and bottom right corner comma-separated coordinates) to the region of interest to speed up processing time. The default for *crop* is (0,0,0,0), which indicates that no cropping is performed. This module also includes boolean parameters for turning on image registration (*register*) and overlap correction (*union*). For best results, *register* and *union* should be set to 0 while the donor and acceptor channels are tested with suboptimal values of *eps*, and should only be set to 1 after the optimal values for *eps* are found.
 ```txt
 crop = 0,0,0,0
 register = 0
@@ -72,9 +81,21 @@ eps = 0.009
 ```
 
 ## Bleach correction
-Once all unexpected outliers have been corrected, the bleach correction module can be (optionally) run. The median intensity of the foreground in the donor and acceptor image stacks are used to estimate the range of frames (colon-separated) between which the bleaching effect can be fit. The type of fit: linear (regularized) or exponential regression must also be stated.
+Once all unexpected outliers have been corrected, the bleach correction module can be (optionally) run. The median intensity of the foreground in the donor and acceptor image stacks are used to estimate the range of frames (colon-separated) between which the bleaching effect can be fit. The type of fit: linear (regularized), exponential or loess regression must also be stated.
 ```txt
 acceptor_bleach_range = 1:6
 donor_bleach_range = 1:6
 fit = linear
 ```
+
+## GUI
+To improve the usability of the toolkit, a simple GUI can be used to fill in the configuration parameters and run the package without directly accessing the config file.
+```bash
+./ibra.py -g
+```
+The GUI parameters are identical to those in the config file with the addition of an option use an existing config file. The desired configuration can be run using the *Run* button at the bottom of the GUI. When the *Run* button is pressed, a config file with the chosen set of parameters is saved in */ibra*. This saved config file can later be directly run using the *Config Filename* field along with the desired *Output Options*.
+
+### GUI default setting
+![GUI](images/GUI_example.png)
+
+It should be noted that even when using the GUI, progress and error messages will only be displayed in the run terminal.

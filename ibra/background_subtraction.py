@@ -29,13 +29,34 @@ class stack():
         stack.val = val
 
         # Import stack
-        im_path =  work_inp_path + '_' + stack.val + '.' + ext
+        im_path = work_inp_path + '_' + stack.val + '.' + ext
         self.im_stack = pims.open(im_path)
         stack.siz1, stack.siz2 = self.im_stack.frame_shape
 
     # Set class frame parameters
     @classmethod
     def set_frame_parameters(cls,win):
+        # Test to find suggested values of nwindow
+        if (cls.siz1 <= 1400 or cls.siz2 <= 1400):
+            win_test = range(20,37,4)
+        else:
+            win_test = range(24,41,4)
+
+        win_res = [0] * 4
+        for winn, winc in enumerate(win_test):
+            if (cls.siz1 % winc == 0 and cls.siz2 % winc == 0):
+                win_res[winn] = 1
+
+        sug = win_test[win_res.index(1)]
+
+        # Check nwindows parameter
+        ass_str1 = f"nwindows must be a factor of the X and Y image resolution (suggested value: {sug})"
+        ass_str2 = f"nwindows should be increased (suggested value: {sug})"
+        assert (cls.siz1 % win == 0), ass_str1
+        assert (cls.siz2 % win == 0), ass_str1
+        assert (cls.siz1/win <= 80.0), ass_str2
+        assert (cls.siz2/win <= 80.0), ass_str2
+
         # Find frame size and set window size
         cls.dim = np.int16(cls.siz2/win)
         cls.height = np.int16(win)
@@ -49,6 +70,7 @@ class stack():
         grid = np.indices((cls.dim, cls.dim))
         offset = (cls.dim - 1)*0.5
         stack.dist_grid = np.sqrt(np.square(np.subtract(grid[0], offset)) + np.square(np.subtract(grid[1], offset)))
+
 
     # Set class constants
     @classmethod
@@ -94,18 +116,30 @@ class stack():
 
 
     # Run background subtraction stack workflow
-    def stack_workflow(self):
-        # Create frame class and submit processes
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = []
-            for pos, count in enumerate(stack.frange):
-                fr = frame(np.asarray(self.im_stack[count]), count, pos)
-                process = executor.submit(fr.frame_workflow)
-                futures.append(process)
+    def stack_workflow(self,parallel):
+        if (parallel):
+            # Create frame class and submit processes
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                futures = []
+                for pos, count in enumerate(stack.frange):
+                    fr = frame(np.asarray(self.im_stack[count]), count, pos)
+                    process = executor.submit(fr.frame_workflow)
+                    futures.append(process)
 
-        # Combine parallelized output into updated metrics
-        for future in concurrent.futures.as_completed(futures):
-            self.metric_update(future.result())
+            # Combine parallelized output into updated metrics
+            for future in concurrent.futures.as_completed(futures):
+                self.metric_update(future.result())
+
+        else:
+            for pos, count in enumerate(stack.frange):
+                # Initialize frame
+                fr = frame(np.asarray(self.im_stack[count]), count, pos)
+
+                # Run frame processing
+                result = fr.frame_workflow()
+
+                # Update metrics
+                self.metric_update(result)
 
 
 # Create single image frame class
@@ -202,15 +236,12 @@ class frame(stack):
         return (self.pos, self.im_frame_orig, self.XY_interp_back, self.im_frame, self.tile_prop, self.core_samples_mask, self.labels)
 
 
-def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,anim_save,h5_save,tiff_save,frange):
+def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win,parallel,anim_save,h5_save,tiff_save,frange):
     # Run through the donor/acceptor subtraction on a per frame basis
     if module == 0:
         val = 'acceptor'
     else:
         val = 'donor'
-
-    assert (eps > 0), "eps value must be a positive float between 0 and 1"
-    assert (eps <= 1), "eps value must be a positive float between 0 and 1"
 
     # Start time
     time_start = timer()
@@ -218,6 +249,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     # Create stack class from input TIFF file
     all = stack(work_inp_path,val,ext)
 
+    # Frame number check
     assert (max(frange) < len(all.im_stack)), "frame numbers not found in input TIFF stack"
 
     # Assign frame parameters
@@ -230,7 +262,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     all.metric_prealloc()
 
     # Run image processing workflow
-    all.stack_workflow()
+    all.stack_workflow(parallel)
 
     # End time
     time_end = timer()
@@ -257,7 +289,7 @@ def background(verbose,logger,work_inp_path,work_out_path,ext,res,module,eps,win
     # Save background-subtracted acceptor/donor images as TIFF
     if (tiff_save):
         tiff_time_start = timer()
-        tiff(all.im_framef, work_out_path + '_' + val + '.tif')
+        tiff(all.im_framef, work_out_path + '_' + val + '_back.tif')
         tiff_time_end = timer()
 
         if (verbose):

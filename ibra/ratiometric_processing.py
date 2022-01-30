@@ -21,7 +21,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
     # Input acceptor and donor stacks
     try:
-        f3 = h5py.File(work_out_path + '_back_ratio.h5', 'r')
+        f3 = h5py.File(work_out_path + '_ratio_back.h5', 'r')
         ratio_frange = np.array(f3.attrs['ratio_frange'])
         acceptor = np.array(f3['acceptor'])
         donor = np.array(f3['donor'])
@@ -30,7 +30,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         donori = dict(zip(ratio_frange, np.array(f3['donori'])))
         f3.close()
     except:
-        raise ImportError(work_out_path + "_back_ratio.h5 not found")
+        raise ImportError(work_out_path + "_ratio_back.h5 not found")
 
     # Fit and correct acceptor channel intensity
     nframes = acceptor.shape[0]
@@ -58,7 +58,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Save acceptor bleaching factors
         if (h5_save):
-            h5(acceptorb,'acceptorb',work_out_path+'_back_ratio.h5',ratio_frange)
+            h5(acceptorb,'acceptorb',work_out_path+'_ratio_back.h5',ratio_frange)
 
     # Fit and correct donor channel intensity
     if (donor_bound[1] > donor_bound[0]):
@@ -85,7 +85,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
         # Save donor bleaching factors
         if (h5_save):
-            h5(donorb,'donorb',work_out_path+'_back_ratio.h5',ratio_frange)
+            h5(donorb,'donorb',work_out_path+'_ratio_back.h5',ratio_frange)
 
     # End time
     time_end = timer()
@@ -96,7 +96,7 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
 
     # Update log file
     logger.info('(Bleach Correction) ' + 'acceptor_bleach_frames: ' + str(acceptor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
-                + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1)
+                + ', donor_bleach_frames: ' + str(donor_bound[0]+1) + '-' + str(ratio_frange[-1] + 1) + ', fit: ' + str(fitter)
                 + ', time: ' + time_elapsed + ' sec, save: ' + str(h5_save))
 
     # Create plot to show median intensity over frame number after bleaching
@@ -110,20 +110,20 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
         # Save bleach corrected ratio image
         if (h5_save):
             h5_time_start = timer()
-            h5(ratio,'ratio',work_out_path+'_back_ratio.h5',frange)
+            h5(ratio,'ratio',work_out_path+'_ratio_back.h5',frange)
             h5_time_end = timer()
 
             if (verbose):
-                print("Saving Ratio stack in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start) + 1) + " second(s)]")
+                print("Saving Ratio stack in " + work_out_path+'_ratio_back.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start) + 1) + " second(s)]")
 
         # Save bleach corrected ratio image as TIFF
         if (tiff_save):
             tiff_time_start = timer()
-            tiff(ratio, work_out_path + '_back_ratio_bleach.tif')
+            tiff(ratio, work_out_path + '_ratio_back_bleach.tif')
             tiff_time_end = timer()
 
             if (verbose):
-                print("Saving bleached Ratio TIFF stack in " + work_out_path + '_back_ratio_bleach.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]")
+                print("Saving bleached Ratio TIFF stack in " + work_out_path + '_ratio_back_bleach.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]")
 
 
 def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save,frange):
@@ -179,7 +179,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     # Search for saved ratio images
     try:
         # Input files into dictionaries
-        f2 = h5py.File(work_out_path + '_back_ratio.h5', 'r')
+        f2 = h5py.File(work_out_path + '_ratio_back.h5', 'r')
         ratio_frange = np.array(f2.attrs['ratio_frange'])
 
         acceptori = dict(list(zip(ratio_frange, np.array(f2['acceptori']))))
@@ -193,8 +193,8 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     acceptornz, donornz = {},{}
 
     # Set up constants for loop
-    mult = np.float16(255)/np.float16(res)
-    ires = 100/np.float16(res)
+    mult = np.float32(255)/np.float32(res)
+    ires = 100/np.float32(res)
     ipix = 100/(Xdim*Ydim)
 
     # Loop through frames
@@ -208,9 +208,19 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             tvec = trans["tvec"].round(4)
             donorc[frame,:,:] = np.round(ird.transform_img(donorc[frame,:,:], tvec=tvec))
 
-        # Otsu thresholding
-        _, A_thresh = cv2.threshold(np.uint8(np.float16(acceptorc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-        _, B_thresh = cv2.threshold(np.uint8(np.float16(donorc[frame,:,:])*mult), 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        # Thresholding
+        acceptors = np.uint8(np.float32(acceptorc[frame, :, :]) * mult)
+        donors = np.uint8(np.float32(donorc[frame, :, :]) * mult)
+
+        # Check for max image intensity
+        if np.uint32(np.amax(acceptors)) + np.uint32(np.amax(donors)) > 70:
+            # Otsu thresholding for normal intensity images
+            _, A_thresh = cv2.threshold(acceptors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+            _, B_thresh = cv2.threshold(donors, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        else:
+            # Simple thresholding for low intensity images
+            _, A_thresh = cv2.threshold(acceptors, 3, 255, cv2.THRESH_BINARY)
+            _, B_thresh = cv2.threshold(donors, 3, 255, cv2.THRESH_BINARY)
 
         # Setting values below threshold to zero
         acceptorc[frame,:,:] *= np.uint16(A_thresh/255)
@@ -271,21 +281,21 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             donori_brange = np.array([donori[a] for a in brange])
 
             h5_time_start = timer()
-            h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_back_ratio.h5',frange)
-            h5(donorc[brange,:,:],'donor',work_out_path+'_back_ratio.h5',frange)
-            h5(acceptori_brange, 'acceptori', work_out_path + '_back_ratio.h5', frange)
-            h5(donori_brange, 'donori', work_out_path + '_back_ratio.h5', frange)
-            h5(ratio[brange,:,:], 'ratio', work_out_path + '_back_ratio.h5',frange)
+            h5(acceptorc[brange,:,:],'acceptor',work_out_path+'_ratio_back.h5',frange)
+            h5(donorc[brange,:,:],'donor',work_out_path+'_ratio_back.h5',frange)
+            h5(acceptori_brange, 'acceptori', work_out_path + '_ratio_back.h5', frange)
+            h5(donori_brange, 'donori', work_out_path + '_ratio_back.h5', frange)
+            h5(ratio[brange,:,:], 'ratio', work_out_path + '_ratio_back.h5',frange)
             h5_time_end = timer()
 
             if (verbose):
-                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_back_ratio.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start) + 1) + " second(s)]"))
+                print(("Saving Acceptor, Donor and Ratio stacks in " + work_out_path+'_ratio_back.h5' + ' [Time: ' + str(int(h5_time_end - h5_time_start) + 1) + " second(s)]"))
     
         # Save NON-bleach corrected ratio image as TIFF
         if (tiff_save):
             tiff_time_start = timer()
-            tiff(ratio, work_out_path + '_back_ratio.tif')
+            tiff(ratio, work_out_path + '_ratio_back.tif')
             tiff_time_end = timer()
 
             if (verbose):
-                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_back_ratio.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]"))
+                print(("Saving unbleached Ratio TIFF stack in " + work_out_path + '_ratio_back.tif' + ' [Time: ' + str(int(tiff_time_end - tiff_time_start)+1) + " second(s)]"))

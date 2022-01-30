@@ -19,6 +19,7 @@ import os
 from scipy.optimize import curve_fit
 from sklearn import linear_model
 from scipy import ndimage
+from loess import loess_1d
 
 rcParams['font.family'] = 'serif'
 
@@ -235,7 +236,7 @@ def time_evolution(acceptor,donor,work_out_path,name,ylabel,h5_save):
         yd = np.array(yd)
 
         # Open HDF5 dataset
-        f = h5py.File(work_out_path+'_back_ratio.h5', 'a')
+        f = h5py.File(work_out_path+'_ratio_back.h5', 'a')
 
         # Save dictionary data in HDF5 dataset
         if (names[0] in f):
@@ -307,6 +308,13 @@ def bleach_fit(brange,frange,intensity,fitter):
             raise ValueError('Fit not found - try a larger range')
         pred = exp_func(frange, *popt)
 
+    elif (fitter == 'loess'):
+        # Fitting loess model
+        try:
+            _, pred, _ = loess_1d.loess_1d(brange, intensity_values, xnew=None, degree=1, frac=0.5, npoints=None, rotate=False, sigy=None)
+        except:
+            raise ValueError('Fit not found - try a larger range')
+
     # Bleach corrected intensity values
     corr = np.divide(pred[0], pred)
 
@@ -320,6 +328,9 @@ def ratio_calc(acceptorc,donorc):
 
     # Flatten array to find intensity percentiles
     ratio_flat = np.ravel(ratio)
+    if np.nonzero(ratio_flat)[0].size == 0:
+        raise Exception("Ratio image is only background. Check the acceptor/donor processed stacks")
+
     perc = np.percentile(ratio_flat[np.nonzero(ratio_flat)], [10, 90], interpolation='nearest')
 
     # Find 10th/90th percentile ratio and additive constant for scaling

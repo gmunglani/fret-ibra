@@ -8,20 +8,26 @@ FRET - IBRA can be downloaded directly from github.
 ```bash
 git clone https://github.com/gmunglani/fret-ibra.git
 cd fret-ibra
-python setup.py install
+pip3 install -r requirements.txt
+cd ibra
 ```
-Additional requirements: ffmpeg
+Additional requirements: ffmpeg \
+Tested Python versions: 3.6-3.8
 
 ## Usage
 
 ```bash
-Usage: ./ibra.py -c <config file> [Options]
+Config file Usage: ./ibra.py -c <config file> [Options]
 Options: -t   Output TIFF stack
          -v   Print progress output (verbose)
          -s   Save as HDF5 file
          -a   Save background subtraction animation (only background module)
          -e   Use all output options
          -h   Print usage
+```
+
+```bash
+GUI Usage: ./ibra.py -g
 ```
 
 ## Examples
@@ -42,3 +48,5 @@ Processing includes:
 ![Ratio](/examples/images/Ratio_output.png)
 
 A detailed explanation of the toolkit functionality can be found here: [Tutorial](/examples/Tutorial.md)
+
+Further image stacks with their config files can be found in the examples folder.
