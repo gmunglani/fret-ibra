@@ -105,12 +105,13 @@ def bleach(verbose,logger,work_out_path,acceptor_bound,donor_bound,fitter,h5_sav
     # Calculate 8-bit ratio image with bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
         # Calculate ratio stack
-        ratio = ratio_calc(acceptor,donor)
+        ratio, ratio_raw = ratio_calc(acceptor,donor)
 
         # Save bleach corrected ratio image
         if (h5_save):
             h5_time_start = timer()
             h5(ratio,'ratio',work_out_path+'_ratio_back.h5',frange)
+            h5(ratio_raw,'ratio_raw',work_out_path+'_ratio_back.h5',frange)
             h5_time_end = timer()
 
             if (verbose):
@@ -273,7 +274,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
     # Calculate 8-bit ratio image with NON-bleach corrected donor and acceptor channels
     if (h5_save or tiff_save):
         # Calculate ratio stack
-        ratio = ratio_calc(acceptorc,donorc)
+        ratio, ratio_raw = ratio_calc(acceptorc,donorc)
 
         # Save processed images, non-zero pixel count, median intensity and ratio processed images in HDF5 format
         if (h5_save):
@@ -286,6 +287,7 @@ def ratio(verbose,logger,work_out_path,crop,res,register,union,h5_save,tiff_save
             h5(acceptori_brange, 'acceptori', work_out_path + '_ratio_back.h5', frange)
             h5(donori_brange, 'donori', work_out_path + '_ratio_back.h5', frange)
             h5(ratio[brange,:,:], 'ratio', work_out_path + '_ratio_back.h5',frange)
+            h5(ratio_raw[brange,:,:], 'ratio_raw', work_out_path + '_ratio_back.h5',frange)
             h5_time_end = timer()
 
             if (verbose):

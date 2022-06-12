@@ -325,6 +325,7 @@ def ratio_calc(acceptorc,donorc):
     # Divide acceptor by donor stack
     ratio = np.true_divide(acceptorc, donorc, out=np.zeros_like(acceptorc, dtype=np.float16), where=donorc != 0)
     ratio = np.nan_to_num(ratio)
+    ratio_raw = np.copy(ratio)
 
     # Flatten array to find intensity percentiles
     ratio_flat = np.ravel(ratio)
@@ -345,4 +346,4 @@ def ratio_calc(acceptorc,donorc):
     ratio[ratio >= 255.0] = 255.0
     ratio = ndimage.median_filter(np.uint8(ratio), size=5)
 
-    return ratio
+    return ratio, ratio_raw
